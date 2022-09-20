@@ -13,8 +13,8 @@ plugins {
 }
 
 android {
-    compileSdk = Config.compileSdkVersion
-    buildToolsVersion = Config.buildTools
+    compileSdk = 32
+    buildToolsVersion = "30.0.3"
     if (project.hasProperty("keystore.properties")) {
         val keystorePropertiesFile = rootProject.file("keystore.properties")
         val keystoreProperties = Properties()
@@ -37,12 +37,12 @@ android {
     }
 
     defaultConfig {
-        applicationId = Config.applicationId
-        minSdk = Config.minSdkVersion
-        targetSdk = Config.targetSdkVersion
-        versionCode = Config.versionCode
-        versionName = Config.versionName
-        testInstrumentationRunner = Config.testInstrumentationRunner
+        applicationId = "ru.aasmc.weather"
+        minSdk = 24
+        targetSdk = 32
+        versionCode = 1
+        versionName = "1.0"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         val API_KEY: String = gradleLocalProperties(rootDir).getProperty("API_KEY")
         val ALGOLIA_API_KEY: String = gradleLocalProperties(rootDir).getProperty("ALGOLIA_API_KEY")
@@ -108,13 +108,13 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility(Config.javaVersion)
-        targetCompatibility(Config.javaVersion)
+        sourceCompatibility(JavaVersion.VERSION_11)
+        targetCompatibility(JavaVersion.VERSION_11)
     }
 
     tasks.withType().all {
         kotlinOptions {
-            jvmTarget = Config.javaVersion.toString()
+            jvmTarget = JavaVersion.VERSION_11.toString()
         }
     }
 
@@ -129,102 +129,99 @@ android {
 dependencies {
 
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
-    implementation(Kotlin.stdlib)
-    implementation(AndroidX.appCompat)
-    implementation(AndroidX.coreKtx)
-    implementation(View.constraintLayout)
-    implementation(AndroidX.legacySupport)
+    implementation(libs.stdlib)
+    implementation(libs.appCompat)
+    implementation(libs.coreKts)
+    implementation(libs.constraintLayout)
+    implementation(libs.legacySupport)
 
     // Material Design
-    implementation(View.material)
+    implementation(libs.material)
 
     // Room
-    implementation(Database.roomRuntime)
-    kapt(Database.roomCompiler)
-    implementation(Database.roomKtx)
+    implementation(libs.roomRuntime)
+    kapt(libs.roomCompiler)
+    implementation(libs.roomKtx)
 
     // Kotlin Coroutines
-    implementation(Kotlin.coroutinesAndroid)
+    implementation(libs.coroutinesAndroid)
 
     // Navigation Components
-    implementation(Navigation.navigationFragment)
-    implementation(Navigation.navigationUi)
+    implementation(libs.navigationFragment)
+    implementation(libs.navigationUi)
 
     // Retrofit
-    implementation(Network.retrofit)
-    implementation(Network.gsonConverter)
-    implementation(Network.gson)
+    implementation(libs.retrofit)
+    implementation(libs.gsonConverter)
+    implementation(libs.gson)
 
     // Preferences
-    implementation(AndroidX.preferences)
+    implementation(libs.preferences)
 
     // Timber
-    implementation(Utils.timber)
+    implementation(libs.timber)
 
     // Weather Image
-    implementation(Utils.weatherImage)
+    implementation(libs.weatherImage)
 
     // CalenderView
-    implementation(Utils.calendarView)
+    implementation(libs.calendarView)
 
     // Google Play Services
-    implementation(Google.googlePlayGms)
+    implementation(libs.googlePlayGms)
 
     // Algolia Search
-    implementation(Utils.algoliaSearch)
+    implementation(libs.algoliaSearch)
 
     // Lifecycle KTX
-    implementation(AndroidX.viewModel)
-    implementation(AndroidX.liveData)
-    implementation(AndroidX.lifeCycleCommon)
+    implementation(libs.viewModel)
+    implementation(libs.liveData)
+    implementation(libs.lifecycleCompiler)
 
     // Paging Library
-    implementation(AndroidX.paging)
+    implementation(libs.paging)
 
     // Elastic view
-    implementation(Utils.elasticViews)
+    implementation(libs.elasticViews)
 
     // WorkManager
-    implementation(AndroidX.workManager)
+    implementation(libs.workManager)
 
     // Dagger-Hilt
-    implementation(Dagger.daggerHilt)
-    kapt(Dagger.hiltCompiler)
+    implementation(libs.daggerHilt)
+    kapt(libs.hiltCompiler)
 
     // OKHttp Logging Interceptor
-    implementation(Network.okhttpInterceptor)
-
-    // Chuck
-    debugImplementation(Network.chuck)
-    releaseImplementation(Network.chuckNoOp)
+    implementation(libs.okhttpInterceptor)
 
     // Firebase BoM, Crashlytics, Analytics
-    implementation(platform(Firebase.firebaseBom))
-    implementation(Firebase.crashlytics)
-    implementation(Firebase.analytics)
+    implementation(platform(libs.firebaseBom))
+    implementation(libs.crashlytics)
+    implementation(libs.analytics)
 
     // AndroidX Test - JVM testing
-    testImplementation(AndroidX.testExt)
-    testImplementation(AndroidX.coreKtxTest)
-    testImplementation(AndroidX.archCoreTesting)
-    testImplementation(UnitTest.junit)
-    testImplementation(UnitTest.roboelectric)
-    testImplementation(UnitTest.hamcrest)
-    testImplementation(Kotlin.coroutineTest)
-    testImplementation(UnitTest.mockitoCore)
+    testImplementation(libs.bundles.testBundle)
+//    testImplementation(libs.coreKtxTest)
+//    testImplementation(libs.archCoreTesting)
+//    testImplementation(libs.junit)
+//    testImplementation(libs.robolectric)
+//    testImplementation(libs.hamcrest)
+//    testImplementation(libs.coroutinesTest)
+//    testImplementation(libs.mockitoCore)
 
     // AndroidX Test - Instrumented testing
-    androidTestImplementation(UnitTest.mockitoCore)
-    androidTestImplementation(AndroidX.testExt)
-    androidTestImplementation(AndroidTest.espresso)
-    androidTestImplementation(AndroidTest.espressoContrib)
-    androidTestImplementation(AndroidTest.espressoIntent)
-    androidTestImplementation(AndroidX.archCoreTesting)
-    androidTestImplementation(AndroidX.coreKtxTest)
-    androidTestImplementation(AndroidX.testRules)
-    androidTestImplementation(Kotlin.coroutineTest)
+    testImplementation(libs.bundles.androidTestBundle)
+//    androidTestImplementation(libs.mockitoCore)
+//    androidTestImplementation(libs.testExt)
+//    androidTestImplementation(libs.espresso)
+//    androidTestImplementation(libs.espressoContrib)
+//    androidTestImplementation(libs.espressoIntent)
+//    androidTestImplementation(libs.archCoreTesting)
+//    androidTestImplementation(libs.coreKtxTest)
+//    androidTestImplementation(libs.testRules)
+//    androidTestImplementation(libs.coroutineTest)
 
     // Until the bug at https://issuetracker.google.com/128612536 is fixed
-    debugImplementation(AndroidX.fragmentTesting)
-    implementation(AndroidTest.idlingResource)
+    debugImplementation(libs.fragmentTesting)
+    implementation(libs.idlingResource)
 }

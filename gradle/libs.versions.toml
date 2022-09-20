@@ -1,0 +1,124 @@
+[versions]
+gradleAndroidVersion = "7.2.1"
+googleServicesVersion = "4.3.13"
+kotlinVersion = "1.7.0"
+coroutinesVersion = "1.6.3"
+androidxCoreVersion = "1.8.0"
+appComtatVersion = "1.4.2"
+lifecycleVersion = "2.6.0-alpha01"
+preferencesVersion = "1.2.0"
+legacyVersion = "1.0.0"
+workVersion = "2.7.1"
+pagingVersion = "2.1.2"
+fragmentVersion = "1.5.2"
+archCoreTestingVersion = "2.1.0"
+coreKtxTestVersion = "1.4.0"
+testExtVersion = "1.1.3"
+testRulesVersion = "1.4.0"
+hiltVersion = "2.42"
+retrofitVersion = "2.9.0"
+okHttpVersion = "4.10.0"
+gsonVersion = "2.9.0"
+roomVersion = "2.4.3"
+navigationVersion = "2.5.1"
+materialVersion = "1.6.1"
+recyclerViewVersion = "1.2.1"
+constraintLayoutVerison = "2.1.4"
+swipeRefreshVersion = "1.1.0"
+viewPagerVersion = "1.0.0"
+timberVersion = "5.0.1"
+glideVersion = "4.1.13"
+weatherVersion = "1.1.0"
+calendarVersion = "v1.0.3"
+algoliaVersion = "2.11.1"
+elasticVersion = "2.0.7"
+junitVersion = "4.13.2"
+mockitoVersion = "4.7.0"
+hamcrestVersion = "1.3"
+robolectricVersion = "4.8.2"
+espressoVersion = "3.4.0"
+junitExtVersion = "1.1.3"
+firebaseVersion = "29.0.0"
+crashLyticsPluginVersion = "2.8.0"
+playVersion = "20.0.0"
+
+[libraries]
+androidGradlePlugin = { group = "com.android.tools.build", name = "gradle", version.ref = "gradleAndroidVersion" }
+kotlinGradlePlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlinVersion" }
+hiltGradlePlugin = { group = "com.google.dagger", name = "hilt-android-gradle-plugin", version.ref = "hiltVersion" }
+safeArgsPlugin = { group = "androidx.navigation", name = "navigation-safe-args-gradle-plugin", version.ref = "navigationVersion" }
+crashlyticsPlugin = { group = "com.google.firebase", name = "firebase-crashlytics-gradle", version.ref = "crashLyticsPluginVersion" }
+google-services = { group = "com.google.gms", name = "google-services", version.ref = "googleServicesVersion" }
+stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlinVersion" }
+coroutinesAndroid = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutinesVersion" }
+coroutinesCore = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutinesVersion" }
+coroutinesTest = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutinesVersion" }
+coreKts = { group = "androidx.core", name = "core-ktx", version.ref = "androidxCoreVersion" }
+appCompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appComtatVersion" }
+liveData = { group = "androidx.lifecycle", name = "lifecycle-livedata-ktx", version.ref = "lifecycleVersion" }
+viewModel = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycleVersion" }
+lifecycleCompiler = { group = "androidx.lifecycle", name = "lifecycle-compiler", version.ref = "lifecycleVersion" }
+legacySupport = { group = "androidx.legacy", name = "legacy-support-v4", version.ref = "legacyVersion" }
+preferences = { group = "androidx.preference", name = "preference-ktx", version.ref = "preferencesVersion" }
+workManager = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workVersion" }
+paging = { group = "androidx.paging", name = "paging-runtime-ktx", version.ref = "pagingVersion" }
+archCoreTesting = { group = "androidx.arch.core", name = "core-testing", version.ref = "archCoreTestingVersion" }
+coreKtxTest = { group = "androidx.test", name = "core-ktx", version.ref = "coreKtxTestVersion" }
+testExt = { group = "androidx.test.ext", name = "junit-ktx", version.ref = "testExtVersion" }
+testRules = { group = "androidx.test", name = "rules", version.ref = "testRulesVersion" }
+fragmentTesting = { group = "androidx.fragment", name = "fragment-testing", version.ref = "fragmentVersion" }
+daggerHilt = { group = "com.google.dagger", name = "hilt-android", version.ref = "hiltVersion" }
+hiltCompiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "hiltVersion" }
+retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofitVersion" }
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okHttpVersion" }
+okhttpInterceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okHttpVersion" }
+gson = { group = "com.google.code.gson", name = "gson", version.ref = "gsonVersion" }
+gsonConverter = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofitVersion" }
+roomRuntime = { group = "androidx.room", name = "room-runtime", version.ref = "roomVersion" }
+roomCompiler = { group = "androidx.room", name = "room-compiler", version.ref = "roomVersion" }
+roomKtx = { group = "androidx.room", name = "room-ktx", version.ref = "roomVersion" }
+navigationFragment = { group = "androidx.navigation", name = "navigation-fragment-ktx", version.ref = "navigationVersion" }
+navigationUi = { group = "androidx.navigation", name = "navigation-ui-ktx", version.ref = "navigationVersion" }
+material = { group = "com.google.android.material", name = "material", version.ref = "materialVersion" }
+constraintLayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintLayoutVerison" }
+swipeRefresh = { group = "androidx.swiperefreshlayout", name = "swiperefreshlayout", version.ref = "swipeRefreshVersion" }
+recyclerView = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerViewVersion" }
+viewPager = { group = "androidx.viewpager2", name = "viewpager2", version.ref = "viewPagerVersion" }
+timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timberVersion" }
+glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "glideVersion" }
+glideCompiler = { group = "com.github.bumptech.glide", name = "compiler", version.ref = "glideVersion" }
+weatherImage = { group = "com.github.pwittchen", name = "weathericonview", version.ref = "weatherVersion" }
+calendarView = { group = "com.github.shrikanth7698", name = "Collapsible-Calendar-View-Android", version.ref = "calendarVersion" }
+algoliaSearch = { group = "com.algolia", name = "instantsearch-android", version.ref = "algoliaVersion" }
+elasticViews = { group = "com.github.skydoves", name = "elasticviews", version.ref = "elasticVersion" }
+junit = { group = "junit", name = "junit", version.ref = "junitVersion" }
+roomTest = { group = "androidx.room", name = "room-testing", version.ref = "roomVersion" }
+mockitoCore = { group = "org.mockito", name = "mockito-core", version.ref = "mockitoVersion" }
+hamcrest = { group = "org.hamcrest", name = "hamcrest-all", version.ref = "hamcrestVersion" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectricVersion" }
+espresso = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoVersion" }
+espressoContrib = { group = "androidx.test.espresso", name = "espresso-contrib", version.ref = "espressoVersion" }
+espressoIntent = { group = "androidx.test.espresso", name = "espresso-intents", version.ref = "espressoVersion" }
+idlingResource = { group = "androidx.test.espresso", name = "espresso-idling-resource", version.ref = "espressoVersion" }
+junitExt = { group = "androidx.test.ext", name = "junit", version.ref = "junitExtVersion" }
+firebaseBom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseVersion" }
+analytics = { group = "com.google.firebase", name = "firebase-analytics-ktx" }
+crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics-ktx" }
+googlePlayGms = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playVersion" }
+
+[bundles]
+roomBundle = ["roomRuntime", "roomKtx"]
+androidTestBundle = ["espresso", "junitExt", "mockitoCore", "testExt", "espressoContrib", "espressoIntent", "idlingResource", "archCoreTesting", "coreKtxTest", "testRules", "coroutinesTest"]
+testBundle = ["testExt", "coreKtxTest", "archCoreTesting", "junit", "robolectric", "hamcrest", "coroutinesTest", "mockitoCore"]
+glideBundle = ["glide", "glideCompiler"]
+viewBundles = ["material", "constraintLayout", "viewPager", "swipeRefresh", "recyclerView"]
+navigationBundle = ["navigationFragment", "navigationUi"]
+networkingBundle = ["retrofit", "okhttp", "okhttpInterceptor", "gson"]
+hiltBundle = ["daggerHilt", "hiltCompiler"]
+lifecycleBundle = ["viewModel", "liveData"]
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "gradleAndroidVersion" }
+android-library = { id = "com.android.library", version.ref = "gradleAndroidVersion" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlinVersion" }
+kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlinVersion" }

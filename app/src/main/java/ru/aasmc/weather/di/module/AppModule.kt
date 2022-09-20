@@ -3,7 +3,6 @@ package ru.aasmc.weather.di.module
 import android.app.Application
 import android.content.Context
 import com.google.gson.Gson
-import com.readystatesoftware.chuck.ChuckInterceptor
 import dagger.Lazy
 import dagger.Module
 import dagger.Provides
