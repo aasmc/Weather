@@ -16,6 +16,7 @@ coreKtxTestVersion = "1.4.0"
 testExtVersion = "1.1.3"
 testRulesVersion = "1.4.0"
 hiltVersion = "2.42"
+hiltWorkerVersion = "1.0.0"
 retrofitVersion = "2.9.0"
 okHttpVersion = "4.10.0"
 gsonVersion = "2.9.0"
@@ -68,6 +69,8 @@ testExt = { group = "androidx.test.ext", name = "junit-ktx", version.ref = "test
 testRules = { group = "androidx.test", name = "rules", version.ref = "testRulesVersion" }
 fragmentTesting = { group = "androidx.fragment", name = "fragment-testing", version.ref = "fragmentVersion" }
 daggerHilt = { group = "com.google.dagger", name = "hilt-android", version.ref = "hiltVersion" }
+hiltWorker = { group = "androidx.hilt", name = "hilt-work", version.ref = "hiltWorkerVersion" }
+hiltWorkerCompiler = { group = "androidx.hilt", name = "hilt-compiler", version.ref = "hiltWorkerVersion" }
 hiltCompiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "hiltVersion" }
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofitVersion" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okHttpVersion" }

@@ -11,10 +11,9 @@ fun WeatherIconView.showIcon(condition: String?) {
     WeatherIconGenerator.getIconResources(context, this, condition)
 }
 
-@BindingAdapter("setTemperature")
-fun TextView.setTemperature(double: Double) {
+fun TextView.setTemperature(double: Double, temperatureUnit: String) {
     val context = this.context
-    if (SharedPreferencesHelper.getInstance(context).getSelectedTemperatureUnit()
+    if (temperatureUnit
         == context.getString(R.string.temp_unit_fahrenheit)) {
         this.text = "${double}${context.resources.getString(R.string.temp_symbol_fahrenheit)}"
     } else {

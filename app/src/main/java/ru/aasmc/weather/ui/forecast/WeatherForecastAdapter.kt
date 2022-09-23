@@ -6,14 +6,17 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import ru.aasmc.weather.data.model.WeatherForecast
+import ru.aasmc.weather.data.preferences.WeatherPreferences
 import ru.aasmc.weather.databinding.WeatherItemBinding
+import ru.aasmc.weather.util.setTemperature
 
 class WeatherForecastAdapter(
-    private val clickListener: ForecastOnClickListener
+    private val clickListener: ForecastOnClickListener,
+    private val weatherPrefs: WeatherPreferences
 ) : ListAdapter<WeatherForecast, WeatherForecastAdapter.ViewHolder>(ForecastDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        return ViewHolder.from(parent)
+        return ViewHolder.from(parent, weatherPrefs)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -25,10 +28,15 @@ class WeatherForecastAdapter(
     }
 
     class ViewHolder(
-        private val binding: WeatherItemBinding
+        private val binding: WeatherItemBinding,
+        private val weatherPrefs: WeatherPreferences
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(weatherForecast: WeatherForecast) {
             binding.weatherForecast = weatherForecast
+            binding.cityTemp.setTemperature(
+                weatherForecast.networkWeatherCondition.temp,
+                weatherPrefs.temperatureUnit
+            )
             val weatherDescription =
                 weatherForecast.networkWeatherDescription.first()
             binding.weatherForecastDescription = weatherDescription
@@ -36,10 +44,10 @@ class WeatherForecastAdapter(
         }
 
         companion object {
-            fun from(parent: ViewGroup): ViewHolder {
+            fun from(parent: ViewGroup, weatherPrefs: WeatherPreferences): ViewHolder {
                 val inflater = LayoutInflater.from(parent.context)
                 val binding = WeatherItemBinding.inflate(inflater, parent, false)
-                return ViewHolder(binding)
+                return ViewHolder(binding, weatherPrefs)
             }
         }
     }

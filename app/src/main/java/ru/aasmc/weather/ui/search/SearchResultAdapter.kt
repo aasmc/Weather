@@ -6,10 +6,11 @@ import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import ru.aasmc.weather.data.model.SearchResult
+import ru.aasmc.weather.data.preferences.WeatherPreferences
 import ru.aasmc.weather.databinding.ItemSearchResultBinding
 
 class SearchResultAdapter(
-    private val delegate: OnItemClickListener
+    private val delegate: OnItemClickListener,
 ) : PagedListAdapter<SearchResult, SearchResultAdapter.ViewHolder>(
     SearchResultDiffCallback()
 ) {

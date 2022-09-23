@@ -7,11 +7,15 @@ import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.shrikanthravi.collapsiblecalendarview.widget.CollapsibleCalendar
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import ru.aasmc.weather.R
+import ru.aasmc.weather.data.preferences.WeatherPreferences
 import ru.aasmc.weather.databinding.FragmentForecastBinding
-import ru.aasmc.weather.util.SharedPreferencesHelper
 import ru.aasmc.weather.util.convertKelvinToCelsius
 import timber.log.Timber
 import javax.inject.Inject
@@ -24,10 +28,10 @@ class ForecastFragment : Fragment(), WeatherForecastAdapter.ForecastOnClickListe
 
     private val viewModel by viewModels<ForecastFragmentViewModel>()
 
-    private val weatherForecastAdapter by lazy { WeatherForecastAdapter(this) }
+    private val weatherForecastAdapter by lazy { WeatherForecastAdapter(this, weatherPrefs) }
 
     @Inject
-    lateinit var prefs: SharedPreferencesHelper
+    lateinit var weatherPrefs: WeatherPreferences
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -43,7 +47,13 @@ class ForecastFragment : Fragment(), WeatherForecastAdapter.ForecastOnClickListe
 
         setupCalendar()
         binding.forecastRecyclerview.adapter = weatherForecastAdapter
-        viewModel.getWeatherForecast(prefs.getCityId())
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                weatherPrefs.observeCityId().collect {
+                    viewModel.getWeatherForecast(it)
+                }
+            }
+        }
         observeMoreViewModels()
     }
 
@@ -52,7 +62,7 @@ class ForecastFragment : Fragment(), WeatherForecastAdapter.ForecastOnClickListe
             forecast.observe(viewLifecycleOwner) { weatherForecast ->
                 weatherForecast?.let { list ->
                     list.forEach { fcst ->
-                        if (prefs.getSelectedTemperatureUnit()
+                        if (weatherPrefs.temperatureUnit
                             == requireActivity().resources.getString(R.string.temp_unit_fahrenheit)
                         ) {
                             fcst.networkWeatherCondition.temp =
@@ -89,7 +99,8 @@ class ForecastFragment : Fragment(), WeatherForecastAdapter.ForecastOnClickListe
         binding.forecastErrorText?.visibility = View.GONE
         binding.forecastProgressBar.visibility = View.VISIBLE
         binding.forecastRecyclerview.visibility = View.GONE
-        viewModel.refreshForecastData(prefs.getCityId())
+        val cityId = weatherPrefs.cityId
+        viewModel.refreshForecastData(cityId)
         binding.forecastSwipeRefresh.isRefreshing = false
     }
 

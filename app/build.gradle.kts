@@ -189,7 +189,9 @@ dependencies {
 
     // Dagger-Hilt
     implementation(libs.daggerHilt)
+    implementation(libs.hiltWorker)
     kapt(libs.hiltCompiler)
+    kapt(libs.hiltWorkerCompiler)
 
     // OKHttp Logging Interceptor
     implementation(libs.okhttpInterceptor)

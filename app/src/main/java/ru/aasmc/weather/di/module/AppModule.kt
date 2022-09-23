@@ -15,7 +15,6 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import ru.aasmc.weather.BuildConfig
 import ru.aasmc.weather.util.LocationLiveData
-import ru.aasmc.weather.util.SharedPreferencesHelper
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
@@ -28,14 +27,6 @@ class AppModule {
     @Singleton
     fun provideContext(application: Application): Context {
         return application.applicationContext
-    }
-
-    @Provides
-    @Singleton
-    fun provideSharedPreferencesHelper(
-        @ApplicationContext context: Context
-    ): SharedPreferencesHelper {
-        return SharedPreferencesHelper.getInstance(context)
     }
 
     @Provides

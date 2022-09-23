@@ -19,13 +19,20 @@ import dagger.hilt.android.AndroidEntryPoint
 import ru.aasmc.weather.R
 import ru.aasmc.weather.data.model.SearchResult
 import ru.aasmc.weather.data.model.Weather
+import ru.aasmc.weather.data.preferences.WeatherPreferences
 import ru.aasmc.weather.databinding.FragmentSearchBinding
 import ru.aasmc.weather.databinding.FragmentSearchDetailBinding
 import ru.aasmc.weather.util.BaseBottomSheetDialog
 import ru.aasmc.weather.util.convertKelvinToCelsius
+import ru.aasmc.weather.util.setTemperature
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class SearchFragment : Fragment(), SearchResultAdapter.OnItemClickListener {
+
+    @Inject
+    lateinit var weatherPrefs: WeatherPreferences
+
     private var _binding: FragmentSearchBinding? = null
     private val binding: FragmentSearchBinding
         get() = _binding!!
@@ -116,6 +123,7 @@ class SearchFragment : Fragment(), SearchResultAdapter.OnItemClickListener {
             weatherCondition = result.networkWeatherDescription.first()
             location.text = result.name
             weather = result
+            temp.setTemperature(result.networkWeatherCondition.temp, weatherPrefs.temperatureUnit)
         }
 
         with(bottomSheetDialog) {

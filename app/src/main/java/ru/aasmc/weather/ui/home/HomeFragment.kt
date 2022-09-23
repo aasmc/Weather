@@ -8,9 +8,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AlertDialog
-import androidx.core.app.ActivityCompat.requestPermissions
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -22,13 +19,14 @@ import androidx.work.WorkManager
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import ru.aasmc.weather.R
+import ru.aasmc.weather.data.preferences.WeatherPreferences
 import ru.aasmc.weather.databinding.FragmentHomeBinding
 import ru.aasmc.weather.ui.showShortSnackBar
 import ru.aasmc.weather.util.GPS_REQUEST_CHECK_SETTINGS
 import ru.aasmc.weather.util.GpsUtil
-import ru.aasmc.weather.util.SharedPreferencesHelper
 import ru.aasmc.weather.util.convertCelsiusToFahrenheit
 import ru.aasmc.weather.util.observeOnce
+import ru.aasmc.weather.util.setTemperature
 import ru.aasmc.weather.worker.UpdateWeatherWorker
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -40,7 +38,7 @@ class HomeFragment : Fragment() {
     private var isGPSEnabled = false
 
     @Inject
-    lateinit var prefs: SharedPreferencesHelper
+    lateinit var weatherPrefs: WeatherPreferences
 
     private val viewModel by viewModels<HomeFragmentViewModel> ()
 
@@ -100,7 +98,7 @@ class HomeFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         binding = FragmentHomeBinding.inflate(inflater)
         return binding.root
     }
@@ -123,13 +121,14 @@ class HomeFragment : Fragment() {
         with(viewModel) {
             weather.observe(viewLifecycleOwner) { weather ->
                 weather?.let {
-                    prefs.saveCityId(it.cityId)
+                    weatherPrefs.cityId = it.cityId
 
-                    if (prefs.getSelectedTemperatureUnit() == activity?.resources?.getString(R.string.temp_unit_fahrenheit))
+                    if (weatherPrefs.temperatureUnit == activity?.resources?.getString(R.string.temp_unit_fahrenheit))
                         it.networkWeatherCondition.temp =
                             convertCelsiusToFahrenheit(it.networkWeatherCondition.temp)
 
                     binding.weather = it
+                    binding.weatherTemperature.setTemperature(it.networkWeatherCondition.temp, weatherPrefs.temperatureUnit)
                     binding.networkWeatherDescription = it.networkWeatherDescription.first()
                 }
             }
@@ -281,7 +280,7 @@ class HomeFragment : Fragment() {
         viewModel.fetchLocationLiveData().observeOnce(
             this
         ) {
-            prefs.saveLocation(it)
+            weatherPrefs.location = it
         }
         val constraint = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)

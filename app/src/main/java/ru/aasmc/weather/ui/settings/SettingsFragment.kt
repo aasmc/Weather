@@ -2,19 +2,35 @@ package ru.aasmc.weather.ui.settings
 
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import ru.aasmc.weather.R
-import ru.aasmc.weather.util.SharedPreferencesHelper
+import ru.aasmc.weather.data.preferences.WeatherPreferences
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class SettingsFragment :
-    PreferenceFragmentCompat(), SharedPreferences.OnSharedPreferenceChangeListener {
-    private lateinit var sharedPreferenceHelper: SharedPreferencesHelper
+    PreferenceFragmentCompat(),
+    SharedPreferences.OnSharedPreferenceChangeListener
+{
+
+    @Inject
+    lateinit var weatherPreferences: WeatherPreferences
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.preferences, rootKey)
-        sharedPreferenceHelper = SharedPreferencesHelper.getInstance(requireContext())
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         init()
     }
 
@@ -31,20 +47,50 @@ class SettingsFragment :
     }
 
     private fun init() {
-        val themePreferenceKey = PREFERENCE_KEY_THEME
-        val themePreference = findPreference<Preference>(themePreferenceKey)
-        val selectedOption = sharedPreferenceHelper.getSelectedThemePref()
-        themePreference?.summary = selectedOption
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    weatherPreferences.observeTheme().collect { selectedOption ->
+                        val themePreferenceKey = PREFERENCE_KEY_THEME
+                        val themePreference =
+                            findPreference<Preference>(themePreferenceKey)
+                        themePreference?.summary = selectedOption
 
-        val cachePreferenceKey = PREFERENCE_KEY_CACHE
-        val cachePreference = findPreference<Preference>(cachePreferenceKey)
-        val setDuration = sharedPreferenceHelper.getUserSetCacheDuration()
-        cachePreference?.summary = setDuration
+                        when (selectedOption) {
+                            getString(R.string.light_theme_value) -> setTheme(
+                                AppCompatDelegate.MODE_NIGHT_NO
+                            )
+                            getString(R.string.dark_theme_value) -> setTheme(
+                                AppCompatDelegate.MODE_NIGHT_YES
+                            )
+                            getString(R.string.auto_battery_value) -> setTheme(
+                                AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY
+                            )
+                            getString(R.string.follow_system_value) -> setTheme(
+                                AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                            )
+                        }
+                    }
+                }
 
-        val unitPreferenceKey = PREFERENCE_KEY_TEMPERATURE_UNIT
-        val unitPreference = findPreference<Preference>(unitPreferenceKey)
-        val selectedUnit = sharedPreferenceHelper.getSelectedTemperatureUnit()
-        unitPreference?.summary = selectedUnit
+                launch {
+                    weatherPreferences.observeCacheDuration().collect { setDuration ->
+                        val cachePreferenceKey = PREFERENCE_KEY_CACHE
+                        val cachePreference =
+                            findPreference<Preference>(cachePreferenceKey)
+                        cachePreference?.summary = setDuration
+                    }
+                }
+
+                launch {
+                    weatherPreferences.observeTemperatureUnit().collect { selectedUnit ->
+                        val unitPreferenceKey = PREFERENCE_KEY_TEMPERATURE_UNIT
+                        val unitPreference = findPreference<Preference>(unitPreferenceKey)
+                        unitPreference?.summary = selectedUnit
+                    }
+                }
+            }
+        }
     }
 
     override fun onSharedPreferenceChanged(
@@ -54,7 +100,7 @@ class SettingsFragment :
         val themePreferenceKey = PREFERENCE_KEY_THEME
         if (key == themePreferenceKey) {
             val themePreference = findPreference<Preference>(themePreferenceKey)
-            val selectedOption = sharedPreferenceHelper.getSelectedThemePref()
+            val selectedOption = weatherPreferences.theme
             themePreference?.summary = selectedOption
 
             when (selectedOption) {
@@ -68,14 +114,14 @@ class SettingsFragment :
         val cachePreferenceKey = PREFERENCE_KEY_CACHE
         if (key == cachePreferenceKey) {
             val cachePreference = findPreference<Preference>(cachePreferenceKey)
-            val setDuration = sharedPreferenceHelper.getUserSetCacheDuration()
+            val setDuration = weatherPreferences.cacheDuration
             cachePreference?.summary = setDuration
         }
 
         val unitPreferenceKey = PREFERENCE_KEY_TEMPERATURE_UNIT
         if (key == unitPreferenceKey) {
             val unitPreference = findPreference<Preference>(unitPreferenceKey)
-            val selectedUnit = sharedPreferenceHelper.getSelectedTemperatureUnit()
+            val selectedUnit = weatherPreferences.temperatureUnit
             unitPreference?.summary = selectedUnit
         }
     }

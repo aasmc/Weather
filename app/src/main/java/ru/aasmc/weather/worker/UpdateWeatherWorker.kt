@@ -1,22 +1,29 @@
 package ru.aasmc.weather.worker
 
 import android.content.Context
+import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedInject
+import ru.aasmc.weather.data.preferences.WeatherPreferences
 import ru.aasmc.weather.data.source.repository.WeatherRepository
 import ru.aasmc.weather.util.NotificationHelper
-import ru.aasmc.weather.util.SharedPreferencesHelper
+import javax.inject.Inject
 
-class UpdateWeatherWorker(
-    context: Context,
-    params: WorkerParameters,
+@HiltWorker
+class UpdateWeatherWorker @AssistedInject constructor(
+    @Assisted context: Context,
+    @Assisted params: WorkerParameters,
     private val repository: WeatherRepository
 ) : CoroutineWorker(context, params) {
     private val notificationHelper = NotificationHelper("Weather Update", context)
-    private val sharedPrefs = SharedPreferencesHelper.getInstance(context)
+
+    @Inject
+    lateinit var weatherPrefs: WeatherPreferences
 
     override suspend fun doWork(): Result {
-        val location = sharedPrefs.getLocation()
+        val location = weatherPrefs.location
         return when (val result = repository.getWeather(location, true)) {
             is ru.aasmc.weather.util.Result.Success -> {
                 if (result.data != null) {

@@ -99,7 +99,6 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    app:setTemperature="@{weather.networkWeatherCondition.temp}"
                     android:textColor="#000"
                     android:textSize="30sp"
                     app:layout_constraintEnd_toEndOf="parent"
