@@ -6,6 +6,7 @@ import androidx.hilt.work.HiltWorkerFactory
 import androidx.preference.PreferenceManager
 import androidx.work.Configuration
 import dagger.hilt.android.HiltAndroidApp
+import ru.aasmc.weather.data.preferences.WeatherPreferences
 import ru.aasmc.weather.util.ThemeManager
 import timber.log.Timber
 import javax.inject.Inject
@@ -16,6 +17,9 @@ class WeatherApplication : Application(), Configuration.Provider {
     @Inject
     lateinit var hiltWorkerFactory: HiltWorkerFactory
 
+    @Inject
+    lateinit var weatherPreferences: WeatherPreferences
+
     override fun onCreate() {
         super.onCreate()
         if (BuildConfig.DEBUG) {
@@ -25,9 +29,8 @@ class WeatherApplication : Application(), Configuration.Provider {
     }
 
     private fun initTheme() {
-        val prefs = PreferenceManager.getDefaultSharedPreferences(this)
-        kotlin.runCatching {
-            ThemeManager.applyTheme(requireNotNull(prefs.getString("theme_key", "")))
+        runCatching {
+            ThemeManager.applyTheme(weatherPreferences.theme)
         }.onFailure { exception ->
             Timber.e("Theme Manager: $exception")
         }
