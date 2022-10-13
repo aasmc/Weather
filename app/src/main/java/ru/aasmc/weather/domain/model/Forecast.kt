@@ -4,6 +4,6 @@ data class Forecast(
     val id: Int,
     val date: String,
     val wind: Wind,
-    val networkWeatherDescription: List<WeatherDescription>,
-    val networkWeatherCondition: WeatherCondition
+    val weatherDescriptions: List<WeatherDescription>,
+    val weatherCondition: WeatherCondition
 )

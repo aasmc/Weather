@@ -154,6 +154,9 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.gsonConverter)
     implementation(libs.gson)
+    implementation(libs.moshi)
+    implementation(libs.moshiConverter)
+    kapt(libs.moshiCodeGen)
 
     // Preferences
     implementation(libs.preferences)

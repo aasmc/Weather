@@ -1,116 +1,146 @@
 package ru.aasmc.weather.ui.forecast
 
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shrikanthravi.collapsiblecalendarview.data.Day
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import ru.aasmc.weather.data.model.WeatherForecast
-import ru.aasmc.weather.data.source.repository.WeatherRepository
-import ru.aasmc.weather.di.scope.DefaultDispatcher
+import ru.aasmc.weather.domain.model.Forecast
+import ru.aasmc.weather.domain.usecases.ObserveForecast
+import ru.aasmc.weather.domain.usecases.StoreForecasts
 import ru.aasmc.weather.util.Result
-import ru.aasmc.weather.util.asLiveData
-import ru.aasmc.weather.util.convertKelvinToCelsius
-import ru.aasmc.weather.util.formatDate
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
 class ForecastFragmentViewModel @Inject constructor(
-    private val repository: WeatherRepository,
-    @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
+    private val observeForecast: ObserveForecast,
+    private val storeForecasts: StoreForecasts
 ) : ViewModel() {
 
-    private val _forecast = MutableLiveData<List<WeatherForecast>?>()
-    val forecast = _forecast.asLiveData()
 
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading = _isLoading.asLiveData()
+    private val _forecastViewState: MutableStateFlow<ForecastViewState> =
+        MutableStateFlow(ForecastViewState.Empty)
+    val forecastViewState: StateFlow<ForecastViewState> = _forecastViewState.asStateFlow()
 
-    private val _dataFetchState = MutableLiveData<Boolean>()
-    val dataFetchState = _dataFetchState.asLiveData()
-
-    private val _filteredForecast = MutableLiveData<List<WeatherForecast>>()
-    val filteredForecast = _filteredForecast.asLiveData()
-
-    fun getWeatherForecast(cityId: Int?) {
-        _isLoading.value = true
-        viewModelScope.launch {
-            when (val result = repository.getForecastWeather(cityId!!, false)) {
-                is Result.Success -> {
-                    _isLoading.postValue(false)
-                    if (!result.data.isNullOrEmpty()) {
-                        val forecasts = result.data
-                        _dataFetchState.value = true
-                        _forecast.value = forecasts
-                    } else {
-                        refreshForecastData(cityId)
-                    }
-                }
-                is Result.Loading -> _isLoading.postValue(true)
-                is Result.Error -> {
-                    // TODO handle error?
-                }
+    fun handleEvent(forecastEvent: ForecastEvent) {
+        when (forecastEvent) {
+            is ForecastEvent.ObserveForecast -> {
+                observeForecast(forecastEvent.cityId)
+            }
+            is ForecastEvent.UpdateWeatherForecast -> {
+                updateForecast(forecastEvent.selectedDay, forecastEvent.cityId)
+            }
+            is ForecastEvent.RefreshForecast -> {
+                refreshForecast(forecastEvent.cityId)
             }
         }
     }
 
-    fun refreshForecastData(cityId: Int?) {
-        _isLoading.value = true
+    private fun observeForecast(cityId: Int) {
         viewModelScope.launch {
-            when (val result = repository.getForecastWeather(cityId!!, true)) {
-                is Result.Success -> {
-                    _isLoading.postValue(false)
-                    if (result.data != null) {
-                        val forecast = result.data.onEach { forecast ->
-                            forecast.networkWeatherCondition.temp =
-                                convertKelvinToCelsius(forecast.networkWeatherCondition.temp)
-                            forecast.date = forecast.date.formatDate()
+            observeForecast(cityId, false)
+                .collect { result ->
+                    updateResult(result, true, cityId) { forecasts ->
+                        _forecastViewState.update {
+                            ForecastViewState.Success(forecasts)
                         }
-                        _forecast.postValue(forecast)
-                        _dataFetchState.postValue(true)
-                        repository.deleteForecastData()
-                        repository.storeForecastData(forecast)
-                    } else {
-                        _dataFetchState.postValue(false)
-                        _forecast.postValue(null)
                     }
                 }
-
-                is Result.Error -> {
-                    _dataFetchState.value = false
-                    _isLoading.value = false
-                }
-
-                is Result.Loading -> _isLoading.postValue(true)
-            }
         }
     }
 
-    fun updateWeatherForecast(selectedDay: Day, list: List<WeatherForecast>) {
-        viewModelScope.launch(defaultDispatcher) {
-            selectedDay.let {
-                val checkerDay = it.day
-                val checkerMonth = it.month
-                val checkerYear = it.year
-
-                val filteredList = list.filter { weatherForecast ->
-                    val format = SimpleDateFormat("d MMM y, h:mma", Locale.getDefault())
-                    val formattedDate = format.parse(weatherForecast.date)
-                    val weatherForecastDay = formattedDate?.date
-                    val weatherForecastMonth = formattedDate?.month
-                    val weatherForecastYear = formattedDate?.year
-                    // This checks if the selected day, month and year are equal. The year requires an addition of 1900 to get the correct year.
-                    weatherForecastDay == checkerDay && weatherForecastMonth == checkerMonth && weatherForecastYear?.plus(
-                        1900
-                    ) == checkerYear
+    private fun refreshForecast(cityId: Int) {
+        viewModelScope.launch {
+            observeForecast(cityId, true)
+                .collect { result ->
+                    updateResult(result, false, cityId) { forecasts ->
+                        _forecastViewState.update {
+                            ForecastViewState.Success(forecasts)
+                        }
+                    }
                 }
-                _filteredForecast.postValue(filteredList)
-            }
         }
     }
 
+    private fun updateForecast(selectedDay: Day, cityId: Int) {
+        viewModelScope.launch {
+            observeForecast(cityId, true)
+                .collect { result ->
+                    updateResult(result, false, cityId) { forecasts ->
+                        selectedDay.let {
+                            val checkerDay = it.day
+                            val checkerMonth = it.month
+                            val checkerYear = it.year
+
+                            val filteredList =
+                                forecasts.filter { weatherForecast ->
+                                    val format =
+                                        SimpleDateFormat(
+                                            "d MMM y, h:mma",
+                                            Locale.getDefault()
+                                        )
+                                    val backupFormat = SimpleDateFormat(
+                                        "yyyy-MM-dd HH:mm:ss", Locale.getDefault()
+                                    )
+                                    val formattedDate = try {
+                                        format.parse(weatherForecast.date)
+                                    } catch (e: Exception) {
+                                        backupFormat.parse(weatherForecast.date)
+                                    }
+                                    val weatherForecastDay = formattedDate?.date
+                                    val weatherForecastMonth =
+                                        formattedDate?.month
+                                    val weatherForecastYear = formattedDate?.year
+                                    // This checks if the selected day, month and year are equal. The year requires an addition of 1900 to get the correct year.
+                                    weatherForecastDay == checkerDay && weatherForecastMonth == checkerMonth && weatherForecastYear?.plus(
+                                        1900
+                                    ) == checkerYear
+                                }
+                            storeForecasts(filteredList)
+                            _forecastViewState.update {
+                                ForecastViewState.FilteredForecast(filteredList)
+                            }
+                        }
+                    }
+                }
+        }
+    }
+
+
+    private suspend fun updateResult(
+        result: Result<List<Forecast>?>,
+        shouldRefreshOnFailure: Boolean,
+        cityId: Int,
+        onResult: suspend (List<Forecast>) -> Unit
+    ) {
+        when (result) {
+            is Result.Error -> {
+                _forecastViewState.update {
+                    ForecastViewState.Failure
+                }
+            }
+            Result.Loading -> {
+                _forecastViewState.update {
+                    ForecastViewState.Loading
+                }
+            }
+            is Result.Success -> {
+                if (result.data != null && result.data.isNotEmpty()) {
+                    onResult(result.data)
+                } else if (shouldRefreshOnFailure) {
+                    refreshForecast(cityId)
+                } else {
+                    _forecastViewState.update {
+                        ForecastViewState.Empty
+                    }
+                }
+            }
+        }
+    }
 }

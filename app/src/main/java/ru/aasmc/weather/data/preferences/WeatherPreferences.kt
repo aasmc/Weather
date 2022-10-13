@@ -1,7 +1,7 @@
 package ru.aasmc.weather.data.preferences
 
 import kotlinx.coroutines.flow.Flow
-import ru.aasmc.weather.data.model.LocationModel
+import ru.aasmc.weather.domain.model.LocationModel
 
 interface WeatherPreferences {
 

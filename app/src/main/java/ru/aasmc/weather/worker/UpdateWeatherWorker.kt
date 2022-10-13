@@ -6,8 +6,9 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.flow.filter
 import ru.aasmc.weather.data.preferences.WeatherPreferences
-import ru.aasmc.weather.data.source.repository.WeatherRepository
+import ru.aasmc.weather.domain.repositories.Repository
 import ru.aasmc.weather.util.NotificationHelper
 import javax.inject.Inject
 
@@ -15,7 +16,7 @@ import javax.inject.Inject
 class UpdateWeatherWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
-    private val repository: WeatherRepository
+    private val repository: Repository
 ) : CoroutineWorker(context, params) {
     private val notificationHelper = NotificationHelper("Weather Update", context)
 
@@ -24,28 +25,39 @@ class UpdateWeatherWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         val location = weatherPrefs.location
-        return when (val result = repository.getWeather(location, true)) {
-            is ru.aasmc.weather.util.Result.Success -> {
-                if (result.data != null) {
-                    when (
-                        val foreResult =
-                            repository.getForecastWeather(result.data.cityId, true)
-                    ) {
-                        is ru.aasmc.weather.util.Result.Success -> {
-                            if (foreResult.data != null) {
-                                notificationHelper.createNotification()
-                                Result.success()
-                            } else {
-                                Result.failure()
-                            }
+
+        var finalResult: Result? = null
+
+        repository.getWeather(location, true)
+            .filter { it !is ru.aasmc.weather.util.Result.Loading }
+            .collect { result ->
+                when (result) {
+                    is ru.aasmc.weather.util.Result.Success -> {
+                        if (result.data != null) {
+                            repository.getForecast(result.data.cityId, true)
+                                .filter { it !is ru.aasmc.weather.util.Result.Loading }
+                                .collect { forecastResult ->
+                                    finalResult = when (forecastResult) {
+                                        is ru.aasmc.weather.util.Result.Success -> {
+                                            if (forecastResult.data != null) {
+                                                notificationHelper.createNotification()
+                                                Result.success()
+                                            } else {
+                                                Result.failure()
+                                            }
+                                        }
+                                        else -> {
+                                            Result.failure()
+                                        }
+                                    }
+                                }
                         }
-                        else -> Result.failure()
                     }
-                } else {
-                    Result.failure()
+                    else -> {
+                        finalResult = Result.failure()
+                    }
                 }
             }
-            else -> Result.failure()
-        }
+        return finalResult ?: Result.failure()
     }
 }

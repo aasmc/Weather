@@ -42,6 +42,8 @@ junitExtVersion = "1.1.3"
 firebaseVersion = "29.0.0"
 crashLyticsPluginVersion = "2.8.0"
 playVersion = "20.0.0"
+moshiVersion = "1.14.0"
+moshiConverterVersion = "2.9.0"
 
 [libraries]
 androidGradlePlugin = { group = "com.android.tools.build", name = "gradle", version.ref = "gradleAndroidVersion" }
@@ -108,6 +110,9 @@ firebaseBom = { group = "com.google.firebase", name = "firebase-bom", version.re
 analytics = { group = "com.google.firebase", name = "firebase-analytics-ktx" }
 crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics-ktx" }
 googlePlayGms = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playVersion" }
+moshiConverter = { group = "com.squareup.retrofit2", name = "converter-moshi", version.ref = "moshiConverterVersion" }
+moshi = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "moshiVersion" }
+moshiCodeGen = { group = "com.squareup.moshi", name = "moshi-kotlin-codegen", version.ref = "moshiVersion" }
 
 [bundles]
 roomBundle = ["roomRuntime", "roomKtx"]

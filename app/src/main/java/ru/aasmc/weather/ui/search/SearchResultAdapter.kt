@@ -5,9 +5,8 @@ import android.view.ViewGroup
 import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import ru.aasmc.weather.data.model.SearchResult
-import ru.aasmc.weather.data.preferences.WeatherPreferences
 import ru.aasmc.weather.databinding.ItemSearchResultBinding
+import ru.aasmc.weather.domain.model.SearchResult
 
 class SearchResultAdapter(
     private val delegate: OnItemClickListener,

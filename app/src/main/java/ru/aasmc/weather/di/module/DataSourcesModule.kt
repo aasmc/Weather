@@ -4,10 +4,10 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import ru.aasmc.weather.data.source.local.WeatherLocalDataSource
-import ru.aasmc.weather.data.source.local.WeatherLocalDataSourceImpl
-import ru.aasmc.weather.data.source.remote.WeatherRemoteDataSource
-import ru.aasmc.weather.data.source.remote.WeatherRemoteDataSourceImpl
+import ru.aasmc.weather.data.local.source.WeatherLocalDataSource
+import ru.aasmc.weather.data.local.source.WeatherLocalDataSourceImpl
+import ru.aasmc.weather.data.remote.WeatherRemoteDataSource
+import ru.aasmc.weather.data.remote.WeatherRemoteDataSourceImpl
 
 @InstallIn(SingletonComponent::class)
 @Module

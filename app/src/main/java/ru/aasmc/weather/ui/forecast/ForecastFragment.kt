@@ -16,6 +16,9 @@ import kotlinx.coroutines.launch
 import ru.aasmc.weather.R
 import ru.aasmc.weather.data.preferences.WeatherPreferences
 import ru.aasmc.weather.databinding.FragmentForecastBinding
+import ru.aasmc.weather.domain.model.Forecast
+import ru.aasmc.weather.domain.model.WeatherCondition
+import ru.aasmc.weather.util.convertCelsiusToFahrenheit
 import ru.aasmc.weather.util.convertKelvinToCelsius
 import timber.log.Timber
 import javax.inject.Inject
@@ -28,7 +31,12 @@ class ForecastFragment : Fragment(), WeatherForecastAdapter.ForecastOnClickListe
 
     private val viewModel by viewModels<ForecastFragmentViewModel>()
 
-    private val weatherForecastAdapter by lazy { WeatherForecastAdapter(this, weatherPrefs) }
+    private val weatherForecastAdapter by lazy {
+        WeatherForecastAdapter(
+            this,
+            weatherPrefs
+        )
+    }
 
     @Inject
     lateinit var weatherPrefs: WeatherPreferences
@@ -50,7 +58,7 @@ class ForecastFragment : Fragment(), WeatherForecastAdapter.ForecastOnClickListe
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 weatherPrefs.observeCityId().collect {
-                    viewModel.getWeatherForecast(it)
+                    viewModel.handleEvent(ForecastEvent.ObserveForecast(it))
                 }
             }
         }
@@ -58,49 +66,81 @@ class ForecastFragment : Fragment(), WeatherForecastAdapter.ForecastOnClickListe
     }
 
     private fun observeMoreViewModels() {
+
         with(viewModel) {
-            forecast.observe(viewLifecycleOwner) { weatherForecast ->
-                weatherForecast?.let { list ->
-                    list.forEach { fcst ->
-                        if (weatherPrefs.temperatureUnit
-                            == requireActivity().resources.getString(R.string.temp_unit_fahrenheit)
-                        ) {
-                            fcst.networkWeatherCondition.temp =
-                                convertKelvinToCelsius(fcst.networkWeatherCondition.temp)
+            viewLifecycleOwner.lifecycleScope.launch {
+                viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    forecastViewState.collect { viewState ->
+                        when (viewState) {
+                            ForecastViewState.Empty -> {
+                                renderEmptyState()
+                            }
+                            ForecastViewState.Failure -> {
+                                renderFailure()
+                            }
+                            is ForecastViewState.FilteredForecast -> {
+                                renderFilteredForecast(viewState.filteredForecasts)
+                            }
+                            ForecastViewState.Loading -> {
+                                renderLoading()
+                            }
+                            is ForecastViewState.Success -> {
+                                renderSuccess(viewState.forecasts)
+                            }
                         }
                     }
-                    weatherForecastAdapter.submitList(list)
                 }
-            }
-
-            dataFetchState.observe(viewLifecycleOwner) { state ->
-                binding.apply {
-                    forecastRecyclerview.isVisible = state
-                    forecastErrorText?.isVisible = !state
-                }
-            }
-
-            isLoading.observe(viewLifecycleOwner) { state ->
-                binding.forecastProgressBar.isVisible = state
-            }
-
-            filteredForecast.observe(viewLifecycleOwner) {
-                binding.emptyListText.isVisible = it.isEmpty()
-                weatherForecastAdapter.submitList(it)
             }
         }
-
         binding.forecastSwipeRefresh.setOnRefreshListener {
             initiateRefresh()
         }
     }
 
+    private fun renderSuccess(forecasts: List<Forecast>) {
+        binding.apply {
+            forecastRecyclerview.isVisible = true
+            forecastErrorText?.isVisible = false
+            forecastProgressBar.isVisible = false
+        }
+        weatherForecastAdapter.submitList(forecasts)
+        binding.emptyListText.isVisible = forecasts.isEmpty()
+
+    }
+
+    private fun renderLoading() {
+        binding.apply {
+            emptyListText.isVisible = false
+            forecastProgressBar.isVisible = true
+            forecastRecyclerview.isVisible = false
+            forecastErrorText?.isVisible = false
+        }
+    }
+
+    private fun renderFilteredForecast(filteredForecasts: List<Forecast>) {
+        renderSuccess(filteredForecasts)
+    }
+
+    private fun renderFailure() {
+        binding.apply {
+            emptyListText.isVisible = false
+            forecastProgressBar.isVisible = false
+            forecastRecyclerview.isVisible = false
+            forecastErrorText?.isVisible = true
+        }
+    }
+
+    private fun renderEmptyState() {
+        binding.apply {
+            emptyListText.isVisible = true
+            forecastProgressBar.isVisible = false
+            forecastRecyclerview.isVisible = false
+            forecastErrorText?.isVisible = false
+        }
+    }
+
     private fun initiateRefresh() {
-        binding.forecastErrorText?.visibility = View.GONE
-        binding.forecastProgressBar.visibility = View.VISIBLE
-        binding.forecastRecyclerview.visibility = View.GONE
-        val cityId = weatherPrefs.cityId
-        viewModel.refreshForecastData(cityId)
+        viewModel.handleEvent(ForecastEvent.RefreshForecast(weatherPrefs.cityId))
         binding.forecastSwipeRefresh.isRefreshing = false
     }
 
@@ -120,11 +160,9 @@ class ForecastFragment : Fragment(), WeatherForecastAdapter.ForecastOnClickListe
                 binding.emptyListText.visibility = View.GONE
                 runCatching {
                     val selectedDay = binding.calendarView.selectedDay
-                    val list = viewModel.forecast.value
-                    viewModel.updateWeatherForecast(
-                        requireNotNull(selectedDay),
-                        requireNotNull(list)
-                    )
+                    selectedDay?.let {
+                        viewModel.handleEvent(ForecastEvent.UpdateWeatherForecast(it, weatherPrefs.cityId))
+                    }
                 }.onFailure {
                     Timber.d(it)
                 }

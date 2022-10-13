@@ -5,15 +5,15 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import ru.aasmc.weather.data.model.WeatherForecast
 import ru.aasmc.weather.data.preferences.WeatherPreferences
 import ru.aasmc.weather.databinding.WeatherItemBinding
+import ru.aasmc.weather.domain.model.Forecast
 import ru.aasmc.weather.util.setTemperature
 
 class WeatherForecastAdapter(
     private val clickListener: ForecastOnClickListener,
     private val weatherPrefs: WeatherPreferences
-) : ListAdapter<WeatherForecast, WeatherForecastAdapter.ViewHolder>(ForecastDiffCallback()) {
+) : ListAdapter<Forecast, WeatherForecastAdapter.ViewHolder>(ForecastDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder.from(parent, weatherPrefs)
@@ -31,14 +31,14 @@ class WeatherForecastAdapter(
         private val binding: WeatherItemBinding,
         private val weatherPrefs: WeatherPreferences
     ) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(weatherForecast: WeatherForecast) {
+        fun bind(weatherForecast: Forecast) {
             binding.weatherForecast = weatherForecast
             binding.cityTemp.setTemperature(
-                weatherForecast.networkWeatherCondition.temp,
+                weatherForecast.weatherCondition.temp,
                 weatherPrefs.temperatureUnit
             )
             val weatherDescription =
-                weatherForecast.networkWeatherDescription.first()
+                weatherForecast.weatherDescriptions.first()
             binding.weatherForecastDescription = weatherDescription
             binding.executePendingBindings()
         }
@@ -52,17 +52,17 @@ class WeatherForecastAdapter(
         }
     }
 
-    class ForecastDiffCallback : DiffUtil.ItemCallback<WeatherForecast>() {
+    class ForecastDiffCallback : DiffUtil.ItemCallback<Forecast>() {
         override fun areItemsTheSame(
-            oldItem: WeatherForecast,
-            newItem: WeatherForecast
+            oldItem: Forecast,
+            newItem: Forecast
         ): Boolean {
-            return oldItem.uID == newItem.uID
+            return oldItem.id == newItem.id
         }
 
         override fun areContentsTheSame(
-            oldItem: WeatherForecast,
-            newItem: WeatherForecast
+            oldItem: Forecast,
+            newItem: Forecast
         ): Boolean {
             return oldItem == newItem
         }

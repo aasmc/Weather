@@ -6,10 +6,10 @@
     <data>
         <variable
             name="weather"
-            type="ru.aasmc.weather.data.model.Weather" />
+            type="ru.aasmc.weather.domain.model.Weather" />
         <variable
             name="weatherCondition"
-            type="ru.aasmc.weather.data.model.NetworkWeatherDescription" />
+            type="ru.aasmc.weather.domain.model.WeatherDescription" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -127,7 +127,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="5dp"
-                                android:text="@{String.valueOf(weather.networkWeatherCondition.humidity).concat(@string/humidity_symbol)}"
+                                android:text="@{String.valueOf(weather.weatherCondition.humidity).concat(@string/humidity_symbol)}"
                                 android:textColor="#FFFFFF"
                                 app:layout_constraintEnd_toEndOf="@+id/textView10"
                                 app:layout_constraintStart_toStartOf="@+id/textView10"
@@ -150,7 +150,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="5dp"
-                                android:text="@{String.valueOf(weather.networkWeatherCondition.pressure).concat(@string/pressure_symbol)}"
+                                android:text="@{String.valueOf(weather.weatherCondition.pressure).concat(@string/pressure_symbol)}"
                                 android:textColor="#FFFFFF"
                                 app:layout_constraintEnd_toEndOf="@+id/textView12"
                                 app:layout_constraintStart_toStartOf="@+id/textView12"

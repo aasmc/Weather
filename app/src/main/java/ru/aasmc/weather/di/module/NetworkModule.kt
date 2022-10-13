@@ -5,7 +5,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import retrofit2.Retrofit
-import ru.aasmc.weather.data.source.remote.retrofit.WeatherApiService
+import ru.aasmc.weather.data.remote.WeatherApiService
 import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)

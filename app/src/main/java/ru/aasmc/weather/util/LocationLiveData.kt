@@ -9,7 +9,7 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
-import ru.aasmc.weather.data.model.LocationModel
+import ru.aasmc.weather.domain.model.LocationModel
 
 class LocationLiveData(
     context: Context

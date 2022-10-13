@@ -7,7 +7,7 @@
 
         <variable
             name="searchResult"
-            type="ru.aasmc.weather.data.model.SearchResult" />
+            type="ru.aasmc.weather.domain.model.SearchResult" />
     </data>
 
     <com.google.android.material.card.MaterialCardView

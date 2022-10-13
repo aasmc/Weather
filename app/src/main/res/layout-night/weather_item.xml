@@ -7,11 +7,11 @@
 
         <variable
             name="weatherForecast"
-            type="ru.aasmc.weather.data.model.WeatherForecast" />
+            type="ru.aasmc.weather.domain.model.Forecast" />
 
         <variable
             name="weatherForecastDescription"
-            type="ru.aasmc.weather.data.model.NetworkWeatherDescription" />
+            type="ru.aasmc.weather.domain.model.WeatherDescription" />
 
     </data>
 
@@ -121,7 +121,7 @@
                         android:layout_marginEnd="8dp"
                         android:textColor="#FFFFFF"
                         android:layout_weight="1"
-                        android:text="@{String.valueOf(weatherForecast.networkWeatherCondition.humidity).concat(@string/humidity_symbol)}"
+                        android:text="@{String.valueOf(weatherForecast.weatherCondition.humidity).concat(@string/humidity_symbol)}"
                         android:textSize="14sp"
                         tools:text="40" />
 
@@ -137,7 +137,7 @@
                         android:layout_marginEnd="8dp"
                         android:layout_weight="1"
                         android:textColor="#FFFFFF"
-                        android:text="@{String.valueOf(weatherForecast.networkWeatherCondition.pressure).concat(@string/pressure_symbol)}"
+                        android:text="@{String.valueOf(weatherForecast.weatherCondition.pressure).concat(@string/pressure_symbol)}"
                         android:textSize="14sp"
                         tools:text="40" />
 

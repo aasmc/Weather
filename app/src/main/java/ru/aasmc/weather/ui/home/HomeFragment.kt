@@ -11,6 +11,9 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
@@ -18,13 +21,14 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import ru.aasmc.weather.R
 import ru.aasmc.weather.data.preferences.WeatherPreferences
 import ru.aasmc.weather.databinding.FragmentHomeBinding
+import ru.aasmc.weather.domain.model.Weather
 import ru.aasmc.weather.ui.showShortSnackBar
 import ru.aasmc.weather.util.GPS_REQUEST_CHECK_SETTINGS
 import ru.aasmc.weather.util.GpsUtil
-import ru.aasmc.weather.util.convertCelsiusToFahrenheit
 import ru.aasmc.weather.util.observeOnce
 import ru.aasmc.weather.util.setTemperature
 import ru.aasmc.weather.worker.UpdateWeatherWorker
@@ -40,7 +44,7 @@ class HomeFragment : Fragment() {
     @Inject
     lateinit var weatherPrefs: WeatherPreferences
 
-    private val viewModel by viewModels<HomeFragmentViewModel> ()
+    private val viewModel by viewModels<HomeFragmentViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,7 +67,7 @@ class HomeFragment : Fragment() {
                     viewLifecycleOwner
                 ) { location ->
                     if (location != null) {
-                        viewModel.getWeather(location)
+                        viewModel.handleEvent(HomeEvent.RefreshWeather(location))
                         setupWorkManager()
                     }
                 }
@@ -118,51 +122,21 @@ class HomeFragment : Fragment() {
     }
 
     private fun observeViewModels() {
-        with(viewModel) {
-            weather.observe(viewLifecycleOwner) { weather ->
-                weather?.let {
-                    weatherPrefs.cityId = it.cityId
-
-                    if (weatherPrefs.temperatureUnit == activity?.resources?.getString(R.string.temp_unit_fahrenheit))
-                        it.networkWeatherCondition.temp =
-                            convertCelsiusToFahrenheit(it.networkWeatherCondition.temp)
-
-                    binding.weather = it
-                    binding.weatherTemperature.setTemperature(it.networkWeatherCondition.temp, weatherPrefs.temperatureUnit)
-                    binding.networkWeatherDescription = it.networkWeatherDescription.first()
-                }
-            }
-
-            dataFetchState.observe(viewLifecycleOwner) { state ->
-                when (state) {
-                    true -> {
-                        unHideViews()
-                        binding.errorText.visibility = View.GONE
-                    }
-                    false -> {
-                        hideViews()
-                        binding.apply {
-                            errorText.visibility = View.VISIBLE
-                            progressBar.visibility = View.GONE
-                            loadingText.visibility = View.GONE
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.homeViewState.collect { viewState ->
+                    when (viewState) {
+                        HomeViewState.Empty -> {
+                            handleEmptyView()
                         }
-                    }
-                }
-            }
-
-            isLoading.observe(viewLifecycleOwner) { state ->
-                when (state) {
-                    true -> {
-                        hideViews()
-                        binding.apply {
-                            progressBar.visibility = View.VISIBLE
-                            loadingText.visibility = View.VISIBLE
+                        HomeViewState.Failure -> {
+                            handleFailure()
                         }
-                    }
-                    false -> {
-                        binding.apply {
-                            progressBar.visibility = View.GONE
-                            loadingText.visibility = View.GONE
+                        HomeViewState.Loading -> {
+                            handleLoading()
+                        }
+                        is HomeViewState.WeatherDetails -> {
+                            handleWeatherDetails(viewState.weather)
                         }
                     }
                 }
@@ -170,12 +144,49 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun handleWeatherDetails(weather: Weather) {
+        unHideViews()
+        binding.apply {
+            progressBar.visibility = View.GONE
+            loadingText.visibility = View.GONE
+        }
+        binding.errorText.visibility = View.GONE
+        weatherPrefs.cityId = weather.cityId
+        binding.weather = weather
+        binding.weatherTemperature.setTemperature(
+            weather.weatherCondition.temp,
+            weatherPrefs.temperatureUnit
+        )
+        binding.networkWeatherDescription = weather.weatherDescriptions.first()
+    }
+
+    private fun handleLoading() {
+        hideViews()
+        binding.apply {
+            progressBar.visibility = View.VISIBLE
+            loadingText.visibility = View.VISIBLE
+        }
+    }
+
+    private fun handleFailure() {
+        hideViews()
+        binding.apply {
+            errorText.visibility = View.VISIBLE
+            progressBar.visibility = View.GONE
+            loadingText.visibility = View.GONE
+        }
+    }
+
+    private fun handleEmptyView() {
+        hideViews()
+    }
+
     private fun initiateRefresh() {
         viewModel.fetchLocationLiveData().observeOnce(
             viewLifecycleOwner
         ) { location ->
             if (location != null) {
-                viewModel.refreshWeather(location)
+                viewModel.handleEvent(HomeEvent.RefreshWeather(location))
             } else {
                 hideViews()
                 binding.apply {
@@ -250,7 +261,10 @@ class HomeFragment : Fragment() {
     }
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
-        ContextCompat.checkSelfPermission(requireContext(), it) == PackageManager.PERMISSION_GRANTED
+        ContextCompat.checkSelfPermission(
+            requireContext(),
+            it
+        ) == PackageManager.PERMISSION_GRANTED
     }
 
     private fun shouldShowRequestPermissionRationale() = REQUIRED_PERMISSIONS.all {

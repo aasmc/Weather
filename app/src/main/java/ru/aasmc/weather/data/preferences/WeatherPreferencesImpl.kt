@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import ru.aasmc.weather.R
-import ru.aasmc.weather.data.model.LocationModel
+import ru.aasmc.weather.domain.model.LocationModel
 import javax.inject.Inject
 
 class WeatherPreferencesImpl @Inject constructor(

@@ -1,7 +1,6 @@
 package ru.aasmc.weather.ui.search
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.LivePagedListBuilder
@@ -16,20 +15,22 @@ import com.algolia.search.model.APIKey
 import com.algolia.search.model.ApplicationID
 import com.algolia.search.model.IndexName
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.jsonPrimitive
 import ru.aasmc.weather.BuildConfig
-import ru.aasmc.weather.data.model.SearchResult
-import ru.aasmc.weather.data.model.Weather
-import ru.aasmc.weather.data.source.repository.WeatherRepository
+import ru.aasmc.weather.domain.model.SearchResult
+import ru.aasmc.weather.domain.usecases.ObserveSearchWeather
 import ru.aasmc.weather.util.Result
-import ru.aasmc.weather.util.asLiveData
 import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
 class SearchFragmentViewModel @Inject constructor(
-    private val repository: WeatherRepository
+    private val observeSearchWeather: ObserveSearchWeather
 ) : ViewModel() {
     private val applicationID = BuildConfig.ALGOLIA_APP_ID
     private val algoliaAPIKey = BuildConfig.ALGOLIA_API_KEY
@@ -68,40 +69,47 @@ class SearchFragmentViewModel @Inject constructor(
         connection += stats
     }
 
-    private val _weatherInfo = MutableLiveData<Weather?>()
-    val weatherInfo = _weatherInfo.asLiveData()
+    private val _viewState: MutableStateFlow<SearchViewState> =
+        MutableStateFlow(SearchViewState.Empty)
+    val viewState: StateFlow<SearchViewState> = _viewState.asStateFlow()
 
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading = _isLoading.asLiveData()
+    fun handleEvent(event: SearchEvent) {
+        when (event) {
+            is SearchEvent.SearchForWeather -> {
+                displayWeatherResult(event.name)
+            }
+        }
+    }
 
-    private val _dataFetchState = MutableLiveData<Boolean>()
-    val dataFetchState = _dataFetchState.asLiveData()
-
-    /**
-     * Gets the [Weather] information for the user selected location[name]
-     * @param name value of the location whose [Weather] data is to be fetched.
-     */
-    fun getSearchWeather(name: String) {
-        _isLoading.postValue(true)
+    private fun displayWeatherResult(name: String) {
         viewModelScope.launch {
-            when (val result = repository.getSearchWeather(name)) {
-                is Result.Error -> {
-                    _isLoading.value = false
-                    _dataFetchState.value = false
-                }
-                Result.Loading -> _isLoading.value = true
-                is Result.Success -> {
-                    _isLoading.value = false
-                    if (result.data != null) {
-                        Timber.i("Weather Result ${result.data}")
-                        _dataFetchState.value = true
-                        _weatherInfo.postValue(result.data)
-                    } else {
-                        _weatherInfo.postValue(null)
-                        _dataFetchState.postValue(false)
+            observeSearchWeather(name)
+                .collect { result ->
+                    when (result) {
+                        is Result.Error -> {
+                            _viewState.update {
+                                SearchViewState.Failure
+                            }
+                        }
+                        Result.Loading -> {
+                            _viewState.update {
+                                SearchViewState.Loading
+                            }
+                        }
+                        is Result.Success -> {
+                            if (result.data != null) {
+                                Timber.i("Weather Result ${result.data}")
+                                _viewState.update {
+                                    SearchViewState.WeatherDetails(result.data)
+                                }
+                            } else {
+                                _viewState.update {
+                                    SearchViewState.Empty
+                                }
+                            }
+                        }
                     }
                 }
-            }
         }
     }
 
