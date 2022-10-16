@@ -87,14 +87,15 @@ class SearchFragment : Fragment(), SearchResultAdapter.OnItemClickListener {
             if (bottomSheetDialog.isShowing) {
                 bottomSheetDialog.dismiss()
             }
+            viewModel.handleEvent(SearchEvent.HideWeatherDetails)
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.viewState.collect { state ->
                     when(state) {
-                        SearchViewState.Empty -> {
-                            handleEmptyState()
+                        SearchViewState.Hidden -> {
+                            handleHiddenState()
                         }
                         SearchViewState.Failure -> {
                             handleFailure()
@@ -133,10 +134,15 @@ class SearchFragment : Fragment(), SearchResultAdapter.OnItemClickListener {
             "An error occurred! Please try again.",
             Snackbar.LENGTH_LONG
         ).show()
+        viewModel.handleEvent(SearchEvent.HideWeatherDetails)
     }
 
-    private fun handleEmptyState() {
-        // TODO
+    private fun handleHiddenState() {
+        binding.searchWeatherLoader.isVisible = false
+        if (bottomSheetDialog.isShowing) {
+            bottomSheetDialog.dismiss()
+        }
+        binding.searchView.setQuery("", false)
     }
 
     private fun displayWeatherResult(result: Weather) {
@@ -162,5 +168,6 @@ class SearchFragment : Fragment(), SearchResultAdapter.OnItemClickListener {
     override fun onSearchResultClicked(searchResult: SearchResult) {
         searchBoxView.setText(searchResult.name)
         viewModel.handleEvent(SearchEvent.SearchForWeather(searchResult.name))
+        binding.searchView.setQuery("", false)
     }
 }

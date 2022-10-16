@@ -104,6 +104,7 @@ class ForecastFragment : Fragment(), WeatherForecastAdapter.ForecastOnClickListe
             forecastProgressBar.isVisible = false
         }
         weatherForecastAdapter.submitList(forecasts)
+        weatherForecastAdapter.notifyDataSetChanged()
         binding.emptyListText.isVisible = forecasts.isEmpty()
 
     }

@@ -1,6 +1,7 @@
 package ru.aasmc.weather.domain.usecases
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import ru.aasmc.weather.domain.model.Forecast
 import ru.aasmc.weather.domain.repositories.Repository
 import ru.aasmc.weather.util.Result

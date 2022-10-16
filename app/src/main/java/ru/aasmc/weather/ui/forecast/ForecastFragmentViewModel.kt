@@ -4,14 +4,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shrikanthravi.collapsiblecalendarview.data.Day
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import ru.aasmc.weather.domain.model.Forecast
+import ru.aasmc.weather.domain.usecases.GetAllForecasts
 import ru.aasmc.weather.domain.usecases.ObserveForecast
-import ru.aasmc.weather.domain.usecases.StoreForecasts
 import ru.aasmc.weather.util.Result
 import java.text.SimpleDateFormat
 import java.util.*
@@ -20,7 +22,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ForecastFragmentViewModel @Inject constructor(
     private val observeForecast: ObserveForecast,
-    private val storeForecasts: StoreForecasts
+    private val getAllForecasts: GetAllForecasts
 ) : ViewModel() {
 
 
@@ -69,46 +71,82 @@ class ForecastFragmentViewModel @Inject constructor(
     }
 
     private fun updateForecast(selectedDay: Day, cityId: Int) {
-        viewModelScope.launch {
-            observeForecast(cityId, true)
-                .collect { result ->
-                    updateResult(result, false, cityId) { forecasts ->
-                        selectedDay.let {
-                            val checkerDay = it.day
-                            val checkerMonth = it.month
-                            val checkerYear = it.year
+        viewModelScope.launch(Dispatchers.IO) {
+            val forecasts = getAllForecasts()
+            selectedDay.let {
+                val checkerDay = it.day
+                val checkerMonth = it.month
+                val checkerYear = it.year
 
-                            val filteredList =
-                                forecasts.filter { weatherForecast ->
-                                    val format =
-                                        SimpleDateFormat(
-                                            "d MMM y, h:mma",
-                                            Locale.getDefault()
-                                        )
-                                    val backupFormat = SimpleDateFormat(
-                                        "yyyy-MM-dd HH:mm:ss", Locale.getDefault()
-                                    )
-                                    val formattedDate = try {
-                                        format.parse(weatherForecast.date)
-                                    } catch (e: Exception) {
-                                        backupFormat.parse(weatherForecast.date)
-                                    }
-                                    val weatherForecastDay = formattedDate?.date
-                                    val weatherForecastMonth =
-                                        formattedDate?.month
-                                    val weatherForecastYear = formattedDate?.year
-                                    // This checks if the selected day, month and year are equal. The year requires an addition of 1900 to get the correct year.
-                                    weatherForecastDay == checkerDay && weatherForecastMonth == checkerMonth && weatherForecastYear?.plus(
-                                        1900
-                                    ) == checkerYear
-                                }
-                            storeForecasts(filteredList)
-                            _forecastViewState.update {
-                                ForecastViewState.FilteredForecast(filteredList)
-                            }
+                val filteredList =
+                    forecasts.filter { weatherForecast ->
+                        val format =
+                            SimpleDateFormat(
+                                "d MMM y, h:mma",
+                                Locale.getDefault()
+                            )
+                        val backupFormat = SimpleDateFormat(
+                            "yyyy-MM-dd HH:mm:ss", Locale.getDefault()
+                        )
+                        val formattedDate = try {
+                            format.parse(weatherForecast.date)
+                        } catch (e: Exception) {
+                            backupFormat.parse(weatherForecast.date)
                         }
+                        val weatherForecastDay = formattedDate?.date
+                        val weatherForecastMonth =
+                            formattedDate?.month
+                        val weatherForecastYear = formattedDate?.year
+                        // This checks if the selected day, month and year are equal. The year requires an addition of 1900 to get the correct year.
+                        weatherForecastDay == checkerDay && weatherForecastMonth == checkerMonth && weatherForecastYear?.plus(
+                            1900
+                        ) == checkerYear
+                    }
+                withContext(Dispatchers.Main) {
+                    _forecastViewState.update {
+                        ForecastViewState.FilteredForecast(filteredList)
                     }
                 }
+            }
+//
+//            observeForecast(cityId, false)
+//                .collect { result ->
+//                    updateResult(result, false, cityId) { forecasts ->
+//                        selectedDay.let {
+//                            val checkerDay = it.day
+//                            val checkerMonth = it.month
+//                            val checkerYear = it.year
+//
+//                            val filteredList =
+//                                forecasts.filter { weatherForecast ->
+//                                    val format =
+//                                        SimpleDateFormat(
+//                                            "d MMM y, h:mma",
+//                                            Locale.getDefault()
+//                                        )
+//                                    val backupFormat = SimpleDateFormat(
+//                                        "yyyy-MM-dd HH:mm:ss", Locale.getDefault()
+//                                    )
+//                                    val formattedDate = try {
+//                                        format.parse(weatherForecast.date)
+//                                    } catch (e: Exception) {
+//                                        backupFormat.parse(weatherForecast.date)
+//                                    }
+//                                    val weatherForecastDay = formattedDate?.date
+//                                    val weatherForecastMonth =
+//                                        formattedDate?.month
+//                                    val weatherForecastYear = formattedDate?.year
+//                                    // This checks if the selected day, month and year are equal. The year requires an addition of 1900 to get the correct year.
+//                                    weatherForecastDay == checkerDay && weatherForecastMonth == checkerMonth && weatherForecastYear?.plus(
+//                                        1900
+//                                    ) == checkerYear
+//                                }
+//                            _forecastViewState.update {
+//                                ForecastViewState.FilteredForecast(filteredList)
+//                            }
+//                        }
+//                    }
+//                }
         }
     }
 

@@ -6,5 +6,5 @@ sealed class SearchViewState {
     object Loading: SearchViewState()
     object Failure: SearchViewState()
     data class WeatherDetails(val weather: Weather): SearchViewState()
-    object Empty: SearchViewState()
+    object Hidden: SearchViewState()
 }

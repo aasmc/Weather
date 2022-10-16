@@ -39,6 +39,7 @@ class WeatherRepositoryImpl @Inject constructor(
                         val data = response.data
                         val domain = mapperRemote.mapToDomain(data)
                         transactionRunner.invoke {
+                            localDataSource.deleteWeather()
                             localDataSource.saveWeather(localMapper.mapFromDomain(domain))
                         }
                     }
@@ -83,6 +84,7 @@ class WeatherRepositoryImpl @Inject constructor(
                         val domain = mapperRemote.mapToDomain(data)
                         val dbForecasts = localMapper.mapFromDomain(domain)
                         transactionRunner.invoke {
+                            localDataSource.deleteForecastWeather()
                             localDataSource.saveAllForecasts(*dbForecasts.toTypedArray())
                         }
                     }
@@ -142,6 +144,11 @@ class WeatherRepositoryImpl @Inject constructor(
 
     override suspend fun deleteForecast() {
         localDataSource.deleteForecastWeather()
+    }
+
+    override suspend fun getAllForecasts(): List<Forecast> {
+        val mapper = WeatherForecastMapperLocal()
+        return mapper.mapToDomain(localDataSource.getAllForecasts())
     }
 
 }

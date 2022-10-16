@@ -21,4 +21,6 @@ interface Repository {
     suspend fun deleteWeather()
 
     suspend fun deleteForecast()
+
+    suspend fun getAllForecasts(): List<Forecast>
 }

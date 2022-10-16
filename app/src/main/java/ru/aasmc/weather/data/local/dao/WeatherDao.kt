@@ -38,4 +38,7 @@ abstract class WeatherDao {
 
     @Query("DELETE FROM forecast")
     abstract suspend fun deleteAllWeatherForecast()
+
+    @Query("SELECT * FROM forecast ORDER BY id")
+    abstract suspend fun getAllForecasts(): List<ForecastDB>
 }

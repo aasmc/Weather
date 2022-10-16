@@ -22,4 +22,6 @@ interface WeatherLocalDataSource {
     suspend fun saveAllForecasts(vararg forecasts: ForecastDB)
 
     suspend fun deleteForecastWeather()
+
+    suspend fun getAllForecasts(): List<ForecastDB>
 }

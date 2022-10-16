@@ -70,13 +70,18 @@ class SearchFragmentViewModel @Inject constructor(
     }
 
     private val _viewState: MutableStateFlow<SearchViewState> =
-        MutableStateFlow(SearchViewState.Empty)
+        MutableStateFlow(SearchViewState.Hidden)
     val viewState: StateFlow<SearchViewState> = _viewState.asStateFlow()
 
     fun handleEvent(event: SearchEvent) {
         when (event) {
             is SearchEvent.SearchForWeather -> {
                 displayWeatherResult(event.name)
+            }
+            SearchEvent.HideWeatherDetails -> {
+                _viewState.update {
+                    SearchViewState.Hidden
+                }
             }
         }
     }
@@ -104,7 +109,7 @@ class SearchFragmentViewModel @Inject constructor(
                                 }
                             } else {
                                 _viewState.update {
-                                    SearchViewState.Empty
+                                    SearchViewState.Hidden
                                 }
                             }
                         }

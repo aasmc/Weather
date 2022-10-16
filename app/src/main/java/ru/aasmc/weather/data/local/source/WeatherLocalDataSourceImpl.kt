@@ -127,4 +127,27 @@ class WeatherLocalDataSourceImpl @Inject constructor(
         }
     }
 
+    override suspend fun getAllForecasts(): List<ForecastDB> {
+        return weatherDao.getAllForecasts().map { f ->
+            ForecastDB(
+                id = f.id,
+                date = f.date,
+                wind = f.wind,
+                networkDescriptions = f.networkDescriptions,
+                networkWeatherCondition = WeatherConditionDB(
+                    temp = if (weatherPreferences.temperatureUnit == context.resources.getString(
+                            R.string.temp_unit_fahrenheit
+                        )
+                    ) {
+                        convertCelsiusToFahrenheit(f.networkWeatherCondition.temp)
+                    } else {
+                        f.networkWeatherCondition.temp
+                    },
+                    pressure = f.networkWeatherCondition.pressure,
+                    humidity = f.networkWeatherCondition.humidity
+                )
+            )
+        }
+    }
+
 }
