@@ -26,30 +26,38 @@ class WeatherLocalDataSourceImpl @Inject constructor(
     override fun observeWeather(): Flow<WeatherDB> {
         return weatherDao.observeWeather()
             .map { weather ->
-                WeatherDB(
-                    uId = weather.uId,
-                    cityId = weather.cityId,
-                    cityName = weather.cityName,
-                    wind = weather.wind,
-                    weatherDescriptions = weather.weatherDescriptions,
-                    weatherCondition = WeatherConditionDB(
-                        temp = if (weatherPreferences.temperatureUnit == context.resources.getString(
-                                R.string.temp_unit_fahrenheit
-                            )
-                        ) {
-                            convertKelvinToCelsius(weather.weatherCondition.temp)
-                        } else {
-                            weather.weatherCondition.temp
-                        },
-                        pressure = weather.weatherCondition.pressure,
-                        humidity = weather.weatherCondition.humidity
-                    )
-                )
+                updateWeather(weather)
             }
     }
 
-    override suspend fun saveWeather(weather: WeatherDB) {
+    private fun updateWeather(weather: WeatherDB): WeatherDB {
+        return WeatherDB(
+            uId = weather.uId,
+            cityId = weather.cityId,
+            cityName = weather.cityName,
+            wind = weather.wind,
+            weatherDescriptions = weather.weatherDescriptions,
+            weatherCondition = WeatherConditionDB(
+                temp = if (weatherPreferences.temperatureUnit == context.resources.getString(
+                        R.string.temp_unit_fahrenheit
+                    )
+                ) {
+                    convertKelvinToCelsius(weather.weatherCondition.temp)
+                } else {
+                    weather.weatherCondition.temp
+                },
+                pressure = weather.weatherCondition.pressure,
+                humidity = weather.weatherCondition.humidity
+            )
+        )
+    }
 
+    override suspend fun getWeather(): WeatherDB {
+        val weather = weatherDao.getWeather()
+        return updateWeather(weather)
+    }
+
+    override suspend fun saveWeather(weather: WeatherDB) {
         val w = WeatherDB(
             uId = weather.uId,
             cityId = weather.cityId,

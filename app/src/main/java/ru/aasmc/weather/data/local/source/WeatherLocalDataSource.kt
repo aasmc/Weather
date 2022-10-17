@@ -11,6 +11,8 @@ interface WeatherLocalDataSource {
 
     fun observeWeather(): Flow<WeatherDB>
 
+    suspend fun getWeather(): WeatherDB
+
     suspend fun saveWeather(weather: WeatherDB)
 
     suspend fun deleteWeather()

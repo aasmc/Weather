@@ -3,6 +3,7 @@ package ru.aasmc.weather.ui.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,6 +33,9 @@ class HomeFragmentViewModel @Inject constructor(
         currentSystemTime()
     }
 
+    private var observeJob: Job? = null
+    private var refreshJob: Job? = null
+
     fun handleEvent(event: HomeEvent) {
         when (event) {
             is HomeEvent.ObserveWeatherEvent -> {
@@ -44,7 +48,8 @@ class HomeFragmentViewModel @Inject constructor(
     }
 
     private fun handleObserveEvent(location: LocationModel) {
-        viewModelScope.launch {
+        observeJob?.cancel()
+        observeJob = viewModelScope.launch {
             observeWeather(location, false)
                 .collect { result ->
                     updateViewState(
@@ -61,7 +66,8 @@ class HomeFragmentViewModel @Inject constructor(
     }
 
     private fun handleRefreshEvent(location: LocationModel) {
-        viewModelScope.launch {
+        refreshJob?.cancel()
+        refreshJob = viewModelScope.launch {
             observeWeather(location, true)
                 .collect { result ->
                     updateViewState(

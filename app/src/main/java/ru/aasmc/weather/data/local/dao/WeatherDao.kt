@@ -23,9 +23,15 @@ abstract class WeatherDao {
     @Query("SELECT * FROM weather_table ORDER BY weather_id DESC LIMIT 1")
     abstract fun observeWeather(): Flow<WeatherDB>
 
+    @Query("SELECT * FROM weather_table ORDER BY weather_id DESC LIMIT 1")
+    abstract suspend fun getWeather(): WeatherDB
+
     @Transaction
     @Query("SELECT * FROM weather_table ORDER BY weather_id DESC")
     abstract fun observeAllWeather(): Flow<List<WeatherDB>>
+
+    @Query("SELECT * FROM weather_table ORDER BY weather_id DESC")
+    abstract suspend fun getAllWeather(): List<WeatherDB>
 
     @Query("DELETE FROM weather_table")
     abstract suspend fun deleteAllWeather()

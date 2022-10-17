@@ -10,5 +10,5 @@ class ObserveSearchWeather @Inject constructor(
     private val repository: Repository
 ) {
     operator fun invoke(location: String): Flow<Result<Weather?>> =
-        repository.getSearchWeather(location)
+        repository.observeSearchWeather(location)
 }

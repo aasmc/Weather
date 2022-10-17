@@ -28,13 +28,13 @@ class UpdateWeatherWorker @AssistedInject constructor(
 
         var finalResult: Result? = null
 
-        repository.getWeather(location, true)
+        repository.observeWeather(location, true)
             .filter { it !is ru.aasmc.weather.util.Result.Loading }
             .collect { result ->
                 when (result) {
                     is ru.aasmc.weather.util.Result.Success -> {
                         if (result.data != null) {
-                            repository.getForecast(result.data.cityId, true)
+                            repository.observeForecasts(result.data.cityId, true)
                                 .filter { it !is ru.aasmc.weather.util.Result.Loading }
                                 .collect { forecastResult ->
                                     finalResult = when (forecastResult) {

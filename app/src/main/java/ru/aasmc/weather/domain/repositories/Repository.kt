@@ -8,11 +8,11 @@ import ru.aasmc.weather.util.Result
 
 interface Repository {
 
-    fun getWeather(locationModel: LocationModel, refresh: Boolean): Flow<Result<Weather?>>
+    fun observeWeather(locationModel: LocationModel, refresh: Boolean): Flow<Result<Weather?>>
 
-    fun getForecast(cityId: Int, refresh: Boolean): Flow<Result<List<Forecast>?>>
+    fun observeForecasts(cityId: Int, refresh: Boolean): Flow<Result<List<Forecast>?>>
 
-    fun getSearchWeather(location: String): Flow<Result<Weather?>>
+    fun observeSearchWeather(location: String): Flow<Result<Weather?>>
 
     suspend fun storeWeather(weather: Weather)
 

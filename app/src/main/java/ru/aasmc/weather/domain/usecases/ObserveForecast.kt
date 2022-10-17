@@ -1,7 +1,6 @@
 package ru.aasmc.weather.domain.usecases
 
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import ru.aasmc.weather.domain.model.Forecast
 import ru.aasmc.weather.domain.repositories.Repository
 import ru.aasmc.weather.util.Result
@@ -11,5 +10,5 @@ class ObserveForecast @Inject constructor(
     private val repo: Repository
 ) {
     operator fun invoke(cityId: Int, refresh: Boolean): Flow<Result<List<Forecast>?>> =
-        repo.getForecast(cityId, refresh)
+        repo.observeForecasts(cityId, refresh)
 }

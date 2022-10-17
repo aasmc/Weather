@@ -14,5 +14,5 @@ class ObserveWeather @Inject constructor(
         locationModel: LocationModel,
         refresh: Boolean
     ): Flow<Result<Weather?>> =
-        repo.getWeather(locationModel, refresh)
+        repo.observeWeather(locationModel, refresh)
 }

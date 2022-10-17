@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.shrikanthravi.collapsiblecalendarview.data.Day
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,6 +31,10 @@ class ForecastFragmentViewModel @Inject constructor(
         MutableStateFlow(ForecastViewState.Empty)
     val forecastViewState: StateFlow<ForecastViewState> = _forecastViewState.asStateFlow()
 
+    private var observeJob: Job? = null
+    private var refreshJob: Job? = null
+    private var updateJob: Job? = null
+
     fun handleEvent(forecastEvent: ForecastEvent) {
         when (forecastEvent) {
             is ForecastEvent.ObserveForecast -> {
@@ -45,7 +50,8 @@ class ForecastFragmentViewModel @Inject constructor(
     }
 
     private fun observeForecast(cityId: Int) {
-        viewModelScope.launch {
+        observeJob?.cancel()
+        observeJob = viewModelScope.launch {
             observeForecast(cityId, false)
                 .collect { result ->
                     updateResult(result, true, cityId) { forecasts ->
@@ -58,7 +64,8 @@ class ForecastFragmentViewModel @Inject constructor(
     }
 
     private fun refreshForecast(cityId: Int) {
-        viewModelScope.launch {
+        refreshJob?.cancel()
+        refreshJob = viewModelScope.launch {
             observeForecast(cityId, true)
                 .collect { result ->
                     updateResult(result, false, cityId) { forecasts ->
@@ -71,7 +78,8 @@ class ForecastFragmentViewModel @Inject constructor(
     }
 
     private fun updateForecast(selectedDay: Day, cityId: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
+        updateJob?.cancel()
+        updateJob = viewModelScope.launch(Dispatchers.IO) {
             val forecasts = getAllForecasts()
             selectedDay.let {
                 val checkerDay = it.day
@@ -108,45 +116,6 @@ class ForecastFragmentViewModel @Inject constructor(
                     }
                 }
             }
-//
-//            observeForecast(cityId, false)
-//                .collect { result ->
-//                    updateResult(result, false, cityId) { forecasts ->
-//                        selectedDay.let {
-//                            val checkerDay = it.day
-//                            val checkerMonth = it.month
-//                            val checkerYear = it.year
-//
-//                            val filteredList =
-//                                forecasts.filter { weatherForecast ->
-//                                    val format =
-//                                        SimpleDateFormat(
-//                                            "d MMM y, h:mma",
-//                                            Locale.getDefault()
-//                                        )
-//                                    val backupFormat = SimpleDateFormat(
-//                                        "yyyy-MM-dd HH:mm:ss", Locale.getDefault()
-//                                    )
-//                                    val formattedDate = try {
-//                                        format.parse(weatherForecast.date)
-//                                    } catch (e: Exception) {
-//                                        backupFormat.parse(weatherForecast.date)
-//                                    }
-//                                    val weatherForecastDay = formattedDate?.date
-//                                    val weatherForecastMonth =
-//                                        formattedDate?.month
-//                                    val weatherForecastYear = formattedDate?.year
-//                                    // This checks if the selected day, month and year are equal. The year requires an addition of 1900 to get the correct year.
-//                                    weatherForecastDay == checkerDay && weatherForecastMonth == checkerMonth && weatherForecastYear?.plus(
-//                                        1900
-//                                    ) == checkerYear
-//                                }
-//                            _forecastViewState.update {
-//                                ForecastViewState.FilteredForecast(filteredList)
-//                            }
-//                        }
-//                    }
-//                }
         }
     }
 

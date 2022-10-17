@@ -25,7 +25,7 @@ class WeatherRepositoryImpl @Inject constructor(
     private val transactionRunner: TransactionRunner
 ) : Repository {
 
-    override fun getWeather(
+    override fun observeWeather(
         locationModel: LocationModel,
         refresh: Boolean
     ): Flow<Result<Weather?>> = flow {
@@ -66,8 +66,7 @@ class WeatherRepositoryImpl @Inject constructor(
         )
     }
 
-
-    override fun getForecast(
+    override fun observeForecasts(
         cityId: Int,
         refresh: Boolean
     ): Flow<Result<List<Forecast>?>> = flow {
@@ -105,7 +104,7 @@ class WeatherRepositoryImpl @Inject constructor(
         )
     }
 
-    override fun getSearchWeather(location: String): Flow<Result<Weather?>> = flow {
+    override fun observeSearchWeather(location: String): Flow<Result<Weather?>> = flow {
         emit(Result.Loading)
 
         val mapper = WeatherMapperRemote()

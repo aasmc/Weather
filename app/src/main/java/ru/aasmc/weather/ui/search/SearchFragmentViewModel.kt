@@ -15,6 +15,7 @@ import com.algolia.search.model.APIKey
 import com.algolia.search.model.ApplicationID
 import com.algolia.search.model.IndexName
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -73,6 +74,8 @@ class SearchFragmentViewModel @Inject constructor(
         MutableStateFlow(SearchViewState.Hidden)
     val viewState: StateFlow<SearchViewState> = _viewState.asStateFlow()
 
+    private var searchJob: Job? = null
+
     fun handleEvent(event: SearchEvent) {
         when (event) {
             is SearchEvent.SearchForWeather -> {
@@ -87,7 +90,8 @@ class SearchFragmentViewModel @Inject constructor(
     }
 
     private fun displayWeatherResult(name: String) {
-        viewModelScope.launch {
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
             observeSearchWeather(name)
                 .collect { result ->
                     when (result) {

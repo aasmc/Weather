@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.OnBackPressedCallback
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -53,6 +54,15 @@ class SearchFragment : Fragment(), SearchResultAdapter.OnItemClickListener {
     private val connection = ConnectionHandler()
     private lateinit var searchBoxView: SearchBoxViewAppCompat
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        requireActivity().onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                viewModel.handleEvent(SearchEvent.HideWeatherDetails)
+            }
+        })
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -77,6 +87,10 @@ class SearchFragment : Fragment(), SearchResultAdapter.OnItemClickListener {
             if (it != null && it.isNotEmpty()) {
                 viewModel.handleEvent(SearchEvent.SearchForWeather(it))
             }
+        }
+
+        bottomSheetDialog.setOnCancelListener {
+            viewModel.handleEvent(SearchEvent.HideWeatherDetails)
         }
 
         val recyclerView = binding.locationSearchRecyclerview
