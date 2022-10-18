@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.aasmc.weather.domain.model.Forecast
 import ru.aasmc.weather.domain.usecases.GetAllForecasts
+import ru.aasmc.weather.domain.usecases.GetForecasts
 import ru.aasmc.weather.domain.usecases.ObserveForecast
 import ru.aasmc.weather.util.Result
 import java.text.SimpleDateFormat
@@ -22,8 +23,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ForecastFragmentViewModel @Inject constructor(
-    private val observeForecast: ObserveForecast,
-    private val getAllForecasts: GetAllForecasts
+    private val getForecasts: GetForecasts
 ) : ViewModel() {
 
 
@@ -31,120 +31,126 @@ class ForecastFragmentViewModel @Inject constructor(
         MutableStateFlow(ForecastViewState.Empty)
     val forecastViewState: StateFlow<ForecastViewState> = _forecastViewState.asStateFlow()
 
-    private var observeJob: Job? = null
+    private var getForecastsJob: Job? = null
     private var refreshJob: Job? = null
     private var updateJob: Job? = null
 
     fun handleEvent(forecastEvent: ForecastEvent) {
         when (forecastEvent) {
             is ForecastEvent.ObserveForecast -> {
-                observeForecast(forecastEvent.cityId)
+                getForecasts(forecastEvent.cityId)
             }
             is ForecastEvent.UpdateWeatherForecast -> {
                 updateForecast(forecastEvent.selectedDay, forecastEvent.cityId)
             }
             is ForecastEvent.RefreshForecast -> {
-                refreshForecast(forecastEvent.cityId)
+                refreshForecasts(forecastEvent.cityId)
             }
         }
     }
 
-    private fun observeForecast(cityId: Int) {
-        observeJob?.cancel()
-        observeJob = viewModelScope.launch {
-            observeForecast(cityId, false)
-                .collect { result ->
-                    updateResult(result, true, cityId) { forecasts ->
-                        _forecastViewState.update {
-                            ForecastViewState.Success(forecasts)
-                        }
-                    }
+    private fun getForecasts(cityId: Int) {
+        getForecastsJob?.cancel()
+        getForecastsJob = viewModelScope.launch {
+            val result = getForecasts(cityId, false)
+            updateViewState(
+                result,
+                true,
+                cityId
+            ) { res ->
+                _forecastViewState.update {
+                    ForecastViewState.Success(res)
                 }
+            }
         }
     }
 
-    private fun refreshForecast(cityId: Int) {
-        refreshJob?.cancel()
-        refreshJob = viewModelScope.launch {
-            observeForecast(cityId, true)
-                .collect { result ->
-                    updateResult(result, false, cityId) { forecasts ->
-                        _forecastViewState.update {
-                            ForecastViewState.Success(forecasts)
-                        }
+    private fun updateViewState(
+        result: Result<List<Forecast>?>,
+        shouldRefreshOnFailure: Boolean,
+        cityId: Int,
+        onResult: (List<Forecast>) -> Unit
+    ) {
+        _forecastViewState.update {
+            ForecastViewState.Loading
+        }
+        when (result) {
+            is Result.Error -> {
+                _forecastViewState.update {
+                    ForecastViewState.Failure(result.exception)
+                }
+            }
+            Result.Loading -> {}
+            is Result.Success -> {
+                if (result.data != null && result.data.isNotEmpty()) {
+                    onResult(result.data)
+                } else if (shouldRefreshOnFailure) {
+                    refreshForecasts(cityId)
+                } else {
+                    _forecastViewState.update {
+                        ForecastViewState.Empty
                     }
                 }
+            }
+        }
+    }
+
+    private fun refreshForecasts(cityId: Int) {
+        refreshJob?.cancel()
+        refreshJob = viewModelScope.launch {
+            val result = getForecasts(cityId, true)
+            updateViewState(
+                result,
+                false,
+                cityId
+            ) { res ->
+                _forecastViewState.update {
+                    ForecastViewState.Success(res)
+                }
+            }
         }
     }
 
     private fun updateForecast(selectedDay: Day, cityId: Int) {
         updateJob?.cancel()
         updateJob = viewModelScope.launch(Dispatchers.IO) {
-            val forecasts = getAllForecasts()
-            selectedDay.let {
-                val checkerDay = it.day
-                val checkerMonth = it.month
-                val checkerYear = it.year
+            val result = getForecasts(cityId, false)
+            updateViewState(
+                result,
+                false,
+                cityId
+            ) { forecasts ->
+                selectedDay.let {
+                    val checkerDay = it.day
+                    val checkerMonth = it.month
+                    val checkerYear = it.year
 
-                val filteredList =
-                    forecasts.filter { weatherForecast ->
-                        val format =
-                            SimpleDateFormat(
-                                "d MMM y, h:mma",
-                                Locale.getDefault()
+                    val filteredList =
+                        forecasts.filter { weatherForecast ->
+                            val format =
+                                SimpleDateFormat(
+                                    "d MMM y, h:mma",
+                                    Locale.getDefault()
+                                )
+                            val backupFormat = SimpleDateFormat(
+                                "yyyy-MM-dd HH:mm:ss", Locale.getDefault()
                             )
-                        val backupFormat = SimpleDateFormat(
-                            "yyyy-MM-dd HH:mm:ss", Locale.getDefault()
-                        )
-                        val formattedDate = try {
-                            format.parse(weatherForecast.date)
-                        } catch (e: Exception) {
-                            backupFormat.parse(weatherForecast.date)
+                            val formattedDate = try {
+                                format.parse(weatherForecast.date)
+                            } catch (e: Exception) {
+                                backupFormat.parse(weatherForecast.date)
+                            }
+                            val weatherForecastDay = formattedDate?.date
+                            val weatherForecastMonth =
+                                formattedDate?.month
+                            val weatherForecastYear = formattedDate?.year
+                            // This checks if the selected day, month and year are equal. The year requires an addition of 1900 to get the correct year.
+                            weatherForecastDay == checkerDay && weatherForecastMonth == checkerMonth && weatherForecastYear?.plus(
+                                1900
+                            ) == checkerYear
                         }
-                        val weatherForecastDay = formattedDate?.date
-                        val weatherForecastMonth =
-                            formattedDate?.month
-                        val weatherForecastYear = formattedDate?.year
-                        // This checks if the selected day, month and year are equal. The year requires an addition of 1900 to get the correct year.
-                        weatherForecastDay == checkerDay && weatherForecastMonth == checkerMonth && weatherForecastYear?.plus(
-                            1900
-                        ) == checkerYear
-                    }
-                withContext(Dispatchers.Main) {
                     _forecastViewState.update {
                         ForecastViewState.FilteredForecast(filteredList)
-                    }
-                }
-            }
-        }
-    }
-
-
-    private suspend fun updateResult(
-        result: Result<List<Forecast>?>,
-        shouldRefreshOnFailure: Boolean,
-        cityId: Int,
-        onResult: suspend (List<Forecast>) -> Unit
-    ) {
-        when (result) {
-            is Result.Error -> {
-                _forecastViewState.update {
-                    ForecastViewState.Failure
-                }
-            }
-            Result.Loading -> {
-                _forecastViewState.update {
-                    ForecastViewState.Loading
-                }
-            }
-            is Result.Success -> {
-                if (result.data != null && result.data.isNotEmpty()) {
-                    onResult(result.data)
-                } else if (shouldRefreshOnFailure) {
-                    refreshForecast(cityId)
-                } else {
-                    _forecastViewState.update {
-                        ForecastViewState.Empty
                     }
                 }
             }

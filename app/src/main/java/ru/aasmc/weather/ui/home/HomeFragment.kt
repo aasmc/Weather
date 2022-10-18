@@ -23,6 +23,8 @@ import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import ru.aasmc.weather.R
+import ru.aasmc.weather.data.exceptions.DBException
+import ru.aasmc.weather.data.exceptions.NetworkException
 import ru.aasmc.weather.data.preferences.WeatherPreferences
 import ru.aasmc.weather.databinding.FragmentHomeBinding
 import ru.aasmc.weather.domain.model.Weather
@@ -32,6 +34,7 @@ import ru.aasmc.weather.util.GpsUtil
 import ru.aasmc.weather.util.observeOnce
 import ru.aasmc.weather.util.setTemperature
 import ru.aasmc.weather.worker.UpdateWeatherWorker
+import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -129,8 +132,8 @@ class HomeFragment : Fragment() {
                         HomeViewState.Empty -> {
                             handleEmptyView()
                         }
-                        HomeViewState.Failure -> {
-                            handleFailure()
+                        is HomeViewState.Failure -> {
+                            handleFailure(viewState.throwable)
                         }
                         HomeViewState.Loading -> {
                             handleLoading()
@@ -168,10 +171,17 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun handleFailure() {
+    private fun handleFailure(throwable: Throwable) {
+        Timber.d(throwable.message)
+        val message = when (throwable) {
+            is NetworkException -> requireActivity().getString(R.string.network_error)
+            is DBException -> requireActivity().getString(R.string.database_error)
+            else -> requireActivity().getString(R.string.unknown_error)
+        }
         hideViews()
         binding.apply {
             errorText.visibility = View.VISIBLE
+            errorText.text = message
             progressBar.visibility = View.GONE
             loadingText.visibility = View.GONE
         }

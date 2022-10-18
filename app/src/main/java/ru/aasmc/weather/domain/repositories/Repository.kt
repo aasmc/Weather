@@ -10,9 +10,15 @@ interface Repository {
 
     fun observeWeather(locationModel: LocationModel, refresh: Boolean): Flow<Result<Weather?>>
 
+    suspend fun getWeather(locationModel: LocationModel, refresh: Boolean): Result<Weather?>
+
     fun observeForecasts(cityId: Int, refresh: Boolean): Flow<Result<List<Forecast>?>>
 
+    suspend fun getForecasts(cityId: Int, refresh: Boolean): Result<List<Forecast>?>
+
     fun observeSearchWeather(location: String): Flow<Result<Weather?>>
+
+    suspend fun getSearchWeather(location: String): Result<Weather?>
 
     suspend fun storeWeather(weather: Weather)
 

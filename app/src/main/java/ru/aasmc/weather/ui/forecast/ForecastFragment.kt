@@ -14,6 +14,8 @@ import com.shrikanthravi.collapsiblecalendarview.widget.CollapsibleCalendar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import ru.aasmc.weather.R
+import ru.aasmc.weather.data.exceptions.DBException
+import ru.aasmc.weather.data.exceptions.NetworkException
 import ru.aasmc.weather.data.preferences.WeatherPreferences
 import ru.aasmc.weather.databinding.FragmentForecastBinding
 import ru.aasmc.weather.domain.model.Forecast
@@ -22,6 +24,8 @@ import ru.aasmc.weather.util.convertCelsiusToFahrenheit
 import ru.aasmc.weather.util.convertKelvinToCelsius
 import timber.log.Timber
 import javax.inject.Inject
+
+// TODO Add animations when changing forecasts on selected day change
 
 @AndroidEntryPoint
 class ForecastFragment : Fragment(), WeatherForecastAdapter.ForecastOnClickListener {
@@ -75,8 +79,8 @@ class ForecastFragment : Fragment(), WeatherForecastAdapter.ForecastOnClickListe
                             ForecastViewState.Empty -> {
                                 renderEmptyState()
                             }
-                            ForecastViewState.Failure -> {
-                                renderFailure()
+                            is ForecastViewState.Failure -> {
+                                renderFailure(viewState.exception)
                             }
                             is ForecastViewState.FilteredForecast -> {
                                 renderFilteredForecast(viewState.filteredForecasts)
@@ -100,11 +104,10 @@ class ForecastFragment : Fragment(), WeatherForecastAdapter.ForecastOnClickListe
     private fun renderSuccess(forecasts: List<Forecast>) {
         binding.apply {
             forecastRecyclerview.isVisible = true
-            forecastErrorText?.isVisible = false
+            forecastErrorText.visibility= View.GONE
             forecastProgressBar.isVisible = false
         }
         weatherForecastAdapter.submitList(forecasts)
-        weatherForecastAdapter.notifyDataSetChanged()
         binding.emptyListText.isVisible = forecasts.isEmpty()
 
     }
@@ -114,7 +117,7 @@ class ForecastFragment : Fragment(), WeatherForecastAdapter.ForecastOnClickListe
             emptyListText.isVisible = false
             forecastProgressBar.isVisible = true
             forecastRecyclerview.isVisible = false
-            forecastErrorText?.isVisible = false
+            forecastErrorText.visibility = View.GONE
         }
     }
 
@@ -122,12 +125,19 @@ class ForecastFragment : Fragment(), WeatherForecastAdapter.ForecastOnClickListe
         renderSuccess(filteredForecasts)
     }
 
-    private fun renderFailure() {
+    private fun renderFailure(throwable: Throwable) {
+        Timber.d(throwable.message)
+        val message = when (throwable) {
+            is NetworkException -> requireActivity().getString(R.string.network_error)
+            is DBException -> requireActivity().getString(R.string.database_error)
+            else -> requireActivity().getString(R.string.unknown_error)
+        }
         binding.apply {
             emptyListText.isVisible = false
             forecastProgressBar.isVisible = false
             forecastRecyclerview.isVisible = false
-            forecastErrorText?.isVisible = true
+            forecastErrorText.visibility = View.VISIBLE
+            forecastErrorText.text = message
         }
     }
 
@@ -136,7 +146,7 @@ class ForecastFragment : Fragment(), WeatherForecastAdapter.ForecastOnClickListe
             emptyListText.isVisible = true
             forecastProgressBar.isVisible = false
             forecastRecyclerview.isVisible = false
-            forecastErrorText?.isVisible = false
+            forecastErrorText.visibility = View.GONE
         }
     }
 
@@ -162,7 +172,12 @@ class ForecastFragment : Fragment(), WeatherForecastAdapter.ForecastOnClickListe
                 runCatching {
                     val selectedDay = binding.calendarView.selectedDay
                     selectedDay?.let {
-                        viewModel.handleEvent(ForecastEvent.UpdateWeatherForecast(it, weatherPrefs.cityId))
+                        viewModel.handleEvent(
+                            ForecastEvent.UpdateWeatherForecast(
+                                it,
+                                weatherPrefs.cityId
+                            )
+                        )
                     }
                 }.onFailure {
                     Timber.d(it)

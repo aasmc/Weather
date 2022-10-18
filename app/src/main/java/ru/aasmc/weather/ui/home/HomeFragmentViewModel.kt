@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.aasmc.weather.domain.model.LocationModel
 import ru.aasmc.weather.domain.model.Weather
-import ru.aasmc.weather.domain.usecases.ObserveWeather
+import ru.aasmc.weather.domain.usecases.GetWeather
 import ru.aasmc.weather.util.LocationLiveData
 import ru.aasmc.weather.util.Result
 import java.text.SimpleDateFormat
@@ -20,7 +20,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeFragmentViewModel @Inject constructor(
-    private val observeWeather: ObserveWeather,
+    private val getWeather: GetWeather
 ) : ViewModel() {
     @Inject
     lateinit var locationLiveData: LocationLiveData
@@ -33,78 +33,66 @@ class HomeFragmentViewModel @Inject constructor(
         currentSystemTime()
     }
 
-    private var observeJob: Job? = null
     private var refreshJob: Job? = null
+    private var getWeatherJob: Job? = null
 
     fun handleEvent(event: HomeEvent) {
         when (event) {
             is HomeEvent.ObserveWeatherEvent -> {
-                handleObserveEvent(event.location)
+                handleGetWeatherEvent(event.location)
             }
             is HomeEvent.RefreshWeather -> {
-                handleRefreshEvent(event.location)
+                handleRefreshWeatherEvent(event.location)
             }
         }
     }
 
-    private fun handleObserveEvent(location: LocationModel) {
-        observeJob?.cancel()
-        observeJob = viewModelScope.launch {
-            observeWeather(location, false)
-                .collect { result ->
-                    updateViewState(
-                        location,
-                        result,
-                        true
-                    ) { weather ->
-                        _homeViewState.update {
-                            HomeViewState.WeatherDetails(weather)
-                        }
-                    }
+    private fun handleGetWeatherEvent(location: LocationModel) {
+        getWeatherJob?.cancel()
+        getWeatherJob = viewModelScope.launch {
+            val weatherRes = getWeather(location, false)
+            updateWeatherViewState(location, weatherRes, true) { w->
+                _homeViewState.update {
+                    HomeViewState.WeatherDetails(w)
                 }
+            }
         }
     }
 
-    private fun handleRefreshEvent(location: LocationModel) {
+    private fun handleRefreshWeatherEvent(location: LocationModel) {
         refreshJob?.cancel()
         refreshJob = viewModelScope.launch {
-            observeWeather(location, true)
-                .collect { result ->
-                    updateViewState(
-                        location,
-                        result,
-                        false
-                    ) { weather ->
-                        _homeViewState.update {
-                            HomeViewState.WeatherDetails(weather)
-                        }
-                    }
+            val weatherRes = getWeather(location, true)
+            updateWeatherViewState(location, weatherRes, false) { w->
+                _homeViewState.update {
+                    HomeViewState.WeatherDetails(w)
                 }
+            }
         }
     }
 
-    private fun updateViewState(
+    private fun updateWeatherViewState(
         location: LocationModel,
         result: Result<Weather?>,
         shouldRefreshOnFailure: Boolean,
         onResult: (Weather) -> Unit
     ) {
+        _homeViewState.update {
+            HomeViewState.Loading
+        }
+
         when (result) {
             is Result.Error -> {
                 _homeViewState.update {
-                    HomeViewState.Failure
+                    HomeViewState.Failure(result.exception)
                 }
             }
-            Result.Loading -> {
-                _homeViewState.update {
-                    HomeViewState.Loading
-                }
-            }
+            Result.Loading -> {}
             is Result.Success -> {
                 if (result.data != null) {
                     onResult(result.data)
                 } else if (shouldRefreshOnFailure) {
-                    handleRefreshEvent(location)
+                    handleRefreshWeatherEvent(location)
                 } else {
                     _homeViewState.update {
                         HomeViewState.Empty
@@ -117,7 +105,6 @@ class HomeFragmentViewModel @Inject constructor(
     val time = currentSystemTime()
 
     fun fetchLocationLiveData() = locationLiveData
-
 
     private fun currentSystemTime(): String {
         val currentTime = System.currentTimeMillis()

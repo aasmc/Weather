@@ -4,7 +4,7 @@ import ru.aasmc.weather.domain.model.Weather
 
 sealed class SearchViewState {
     object Loading: SearchViewState()
-    object Failure: SearchViewState()
+    data class Failure(val throwable: Throwable): SearchViewState()
     data class WeatherDetails(val weather: Weather): SearchViewState()
     object Hidden: SearchViewState()
 }

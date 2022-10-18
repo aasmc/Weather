@@ -24,14 +24,14 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.jsonPrimitive
 import ru.aasmc.weather.BuildConfig
 import ru.aasmc.weather.domain.model.SearchResult
-import ru.aasmc.weather.domain.usecases.ObserveSearchWeather
+import ru.aasmc.weather.domain.usecases.GetSearchWeather
 import ru.aasmc.weather.util.Result
 import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
 class SearchFragmentViewModel @Inject constructor(
-    private val observeSearchWeather: ObserveSearchWeather
+    private val getSearchWeather: GetSearchWeather
 ) : ViewModel() {
     private val applicationID = BuildConfig.ALGOLIA_APP_ID
     private val algoliaAPIKey = BuildConfig.ALGOLIA_API_KEY
@@ -79,7 +79,7 @@ class SearchFragmentViewModel @Inject constructor(
     fun handleEvent(event: SearchEvent) {
         when (event) {
             is SearchEvent.SearchForWeather -> {
-                displayWeatherResult(event.name)
+                getWeatherResult(event.name)
             }
             SearchEvent.HideWeatherDetails -> {
                 _viewState.update {
@@ -89,36 +89,32 @@ class SearchFragmentViewModel @Inject constructor(
         }
     }
 
-    private fun displayWeatherResult(name: String) {
+    private fun getWeatherResult(name: String) {
+        _viewState.update {
+            SearchViewState.Loading
+        }
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
-            observeSearchWeather(name)
-                .collect { result ->
-                    when (result) {
-                        is Result.Error -> {
-                            _viewState.update {
-                                SearchViewState.Failure
-                            }
+            when (val result = getSearchWeather(name)) {
+                is Result.Error -> {
+                    _viewState.update {
+                        SearchViewState.Failure(result.exception)
+                    }
+                }
+                Result.Loading -> {}
+                is Result.Success -> {
+                    if (result.data != null) {
+                        Timber.i("Weather Result ${result.data}")
+                        _viewState.update {
+                            SearchViewState.WeatherDetails(result.data)
                         }
-                        Result.Loading -> {
-                            _viewState.update {
-                                SearchViewState.Loading
-                            }
-                        }
-                        is Result.Success -> {
-                            if (result.data != null) {
-                                Timber.i("Weather Result ${result.data}")
-                                _viewState.update {
-                                    SearchViewState.WeatherDetails(result.data)
-                                }
-                            } else {
-                                _viewState.update {
-                                    SearchViewState.Hidden
-                                }
-                            }
+                    } else {
+                        _viewState.update {
+                            SearchViewState.Hidden
                         }
                     }
                 }
+            }
         }
     }
 

@@ -22,6 +22,8 @@ import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import ru.aasmc.weather.R
+import ru.aasmc.weather.data.exceptions.DBException
+import ru.aasmc.weather.data.exceptions.NetworkException
 import ru.aasmc.weather.data.preferences.WeatherPreferences
 import ru.aasmc.weather.databinding.FragmentSearchBinding
 import ru.aasmc.weather.databinding.FragmentSearchDetailBinding
@@ -29,6 +31,7 @@ import ru.aasmc.weather.domain.model.SearchResult
 import ru.aasmc.weather.domain.model.Weather
 import ru.aasmc.weather.util.BaseBottomSheetDialog
 import ru.aasmc.weather.util.setTemperature
+import timber.log.Timber
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -56,11 +59,17 @@ class SearchFragment : Fragment(), SearchResultAdapter.OnItemClickListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        requireActivity().onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                viewModel.handleEvent(SearchEvent.HideWeatherDetails)
-            }
-        })
+        requireActivity().onBackPressedDispatcher.addCallback(
+            this,
+            object : OnBackPressedCallback(
+                true
+            ) {
+                override fun handleOnBackPressed() {
+                    viewModel.handleEvent(
+                        SearchEvent.HideWeatherDetails
+                    )
+                }
+            })
     }
 
     override fun onCreateView(
@@ -107,12 +116,12 @@ class SearchFragment : Fragment(), SearchResultAdapter.OnItemClickListener {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.viewState.collect { state ->
-                    when(state) {
+                    when (state) {
                         SearchViewState.Hidden -> {
                             handleHiddenState()
                         }
-                        SearchViewState.Failure -> {
-                            handleFailure()
+                        is SearchViewState.Failure -> {
+                            handleFailure(state.throwable)
                         }
                         SearchViewState.Loading -> {
                             handleLoading()
@@ -141,11 +150,17 @@ class SearchFragment : Fragment(), SearchResultAdapter.OnItemClickListener {
         binding.searchWeatherLoader.isVisible = true
     }
 
-    private fun handleFailure() {
+    private fun handleFailure(throwable: Throwable) {
+        Timber.d(throwable.message)
+        val message = when (throwable) {
+            is NetworkException -> requireActivity().getString(R.string.network_error)
+            is DBException -> requireActivity().getString(R.string.database_error)
+            else -> requireActivity().getString(R.string.unknown_error)
+        }
         binding.searchWeatherLoader.isVisible = false
         Snackbar.make(
             requireView(),
-            "An error occurred! Please try again.",
+            message,
             Snackbar.LENGTH_LONG
         ).show()
         viewModel.handleEvent(SearchEvent.HideWeatherDetails)
@@ -164,7 +179,10 @@ class SearchFragment : Fragment(), SearchResultAdapter.OnItemClickListener {
             weatherCondition = result.weatherDescriptions.first()
             location.text = result.name
             weather = result
-            temp.setTemperature(result.weatherCondition.temp, weatherPrefs.temperatureUnit)
+            temp.setTemperature(
+                result.weatherCondition.temp,
+                weatherPrefs.temperatureUnit
+            )
         }
 
         with(bottomSheetDialog) {
