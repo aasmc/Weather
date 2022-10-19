@@ -20,7 +20,7 @@ class FakeRepositorySuccess : Repository {
         locationModel: LocationModel,
         refresh: Boolean
     ): Result<Weather?> {
-        TODO("Not yet implemented")
+        return Result.Success(fakeWeather)
     }
 
     override fun observeForecasts(
@@ -41,7 +41,14 @@ class FakeRepositorySuccess : Repository {
         cityId: Int,
         refresh: Boolean
     ): Result<List<Forecast>?> {
-        TODO("Not yet implemented")
+        return Result.Success(
+            listOf(
+                fakeWeatherForecast,
+                fakeWeatherForecast,
+                fakeWeatherForecast,
+                fakeWeatherForecast
+            )
+        )
     }
 
     override fun observeSearchWeather(location: String): Flow<Result<Weather?>> {

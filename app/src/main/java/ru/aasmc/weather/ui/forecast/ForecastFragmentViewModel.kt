@@ -71,9 +71,6 @@ class ForecastFragmentViewModel @Inject constructor(
         cityId: Int,
         onResult: (List<Forecast>) -> Unit
     ) {
-        _forecastViewState.update {
-            ForecastViewState.Loading
-        }
         when (result) {
             is Result.Error -> {
                 _forecastViewState.update {
@@ -98,6 +95,9 @@ class ForecastFragmentViewModel @Inject constructor(
     private fun refreshForecasts(cityId: Int) {
         refreshJob?.cancel()
         refreshJob = viewModelScope.launch {
+            _forecastViewState.update {
+                ForecastViewState.Loading
+            }
             val result = getForecasts(cityId, true)
             updateViewState(
                 result,

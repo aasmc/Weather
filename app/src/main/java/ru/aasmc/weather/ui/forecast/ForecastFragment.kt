@@ -19,13 +19,8 @@ import ru.aasmc.weather.data.exceptions.NetworkException
 import ru.aasmc.weather.data.preferences.WeatherPreferences
 import ru.aasmc.weather.databinding.FragmentForecastBinding
 import ru.aasmc.weather.domain.model.Forecast
-import ru.aasmc.weather.domain.model.WeatherCondition
-import ru.aasmc.weather.util.convertCelsiusToFahrenheit
-import ru.aasmc.weather.util.convertKelvinToCelsius
 import timber.log.Timber
 import javax.inject.Inject
-
-// TODO Add animations when changing forecasts on selected day change
 
 @AndroidEntryPoint
 class ForecastFragment : Fragment(), WeatherForecastAdapter.ForecastOnClickListener {
@@ -41,6 +36,8 @@ class ForecastFragment : Fragment(), WeatherForecastAdapter.ForecastOnClickListe
             weatherPrefs
         )
     }
+
+    private var animationDuration: Long = 1000
 
     @Inject
     lateinit var weatherPrefs: WeatherPreferences
@@ -103,13 +100,27 @@ class ForecastFragment : Fragment(), WeatherForecastAdapter.ForecastOnClickListe
 
     private fun renderSuccess(forecasts: List<Forecast>) {
         binding.apply {
-            forecastRecyclerview.isVisible = true
             forecastErrorText.visibility= View.GONE
             forecastProgressBar.isVisible = false
         }
+        animateRecyclerViewAppearing()
         weatherForecastAdapter.submitList(forecasts)
         binding.emptyListText.isVisible = forecasts.isEmpty()
 
+    }
+
+    private fun animateRecyclerViewAppearing() {
+        binding.apply {
+            forecastRecyclerview.visibility = View.GONE
+            forecastRecyclerview.apply {
+                alpha = 0f
+                visibility = View.VISIBLE
+                animate()
+                    .alpha(1f)
+                    .setDuration(animationDuration)
+                    .setListener(null)
+            }
+        }
     }
 
     private fun renderLoading() {
