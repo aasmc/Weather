@@ -1,5 +1,7 @@
 package ru.aasmc.weather
 
+import ru.aasmc.weather.data.exceptions.DBException
+import ru.aasmc.weather.data.exceptions.NetworkException
 import ru.aasmc.weather.data.local.entity.ForecastDB
 import ru.aasmc.weather.data.local.entity.WeatherConditionDB
 import ru.aasmc.weather.data.local.entity.WeatherDB
@@ -27,7 +29,7 @@ val fakeDbWeatherEntity = WeatherDB(
 )
 
 val fakeDbWeatherForecast = ForecastDB(
-    1, "Date", WindDB(22.2, 21),
+    1, "2021-07-25 14:22:10", WindDB(22.2, 21),
     listOf(
         WeatherDescriptionDB(1L, "Main", "Desc", "Icon")
     ),
@@ -89,5 +91,9 @@ val fakeWeatherForecastList = listOf(
 )
 
 val invalidDataException = Exception("Invalid Data")
+val networkExceptionLoadForecasts = NetworkException("Failed to load forecasts from network for city ID: 123")
+val networkExceptionLoadWeather = NetworkException("Failed to load weather data from network with location: $dummyLocation")
+val dbExceptionLoadWeather = DBException("Failed to load weather data from database with location: $dummyLocation")
+val dbExceptionLoadForecasts = DBException("Failed to load forecasts from database for city ID: 123")
 const val queryLocation = "Lagos"
 const val cityId = 1234
