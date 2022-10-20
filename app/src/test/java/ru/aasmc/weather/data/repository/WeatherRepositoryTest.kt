@@ -2,12 +2,8 @@ package ru.aasmc.weather.data.repository
 
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNotNull
-import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.notNullValue
@@ -17,7 +13,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
-import org.mockito.Mockito
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
@@ -39,7 +34,7 @@ import ru.aasmc.weather.fakeNetworkWeatherForecast
 import ru.aasmc.weather.fakeWeather
 import ru.aasmc.weather.fakeWeatherForecast
 import ru.aasmc.weather.invalidDataException
-import ru.aasmc.weather.networkExceptionLoadForecasts
+import ru.aasmc.weather.networkExceptionLoadSearchWeather
 import ru.aasmc.weather.networkExceptionLoadWeather
 import ru.aasmc.weather.queryLocation
 import ru.aasmc.weather.util.Result
@@ -229,6 +224,19 @@ class WeatherRepositoryTest {
         assertEquals(weather.wind, fakeWeather.wind)
         assertEquals(weather.weatherCondition, fakeWeather.weatherCondition)
         assertEquals(weather.weatherDescriptions, fakeWeather.weatherDescriptions)
+    }
+
+    @Test
+    fun `assert that getSearchWeather fetches error from the remote source`() = runTest {
+        `when`(remoteDataSource.getSearchWeather(queryLocation))
+            .thenReturn(Result.Error(networkExceptionLoadSearchWeather))
+
+        val response = systemUnderTest.getSearchWeather(queryLocation)
+        verify(remoteDataSource, times(1)).getSearchWeather(queryLocation)
+        assertTrue(response is Result.Error)
+        val msg = (response as Result.Error).exception.message
+        assertNotNull(msg)
+        assertEquals(networkExceptionLoadSearchWeather.message, msg)
     }
 }
 

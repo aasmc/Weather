@@ -5,6 +5,17 @@ Educational project that is based on Instant Weather https://github.com/mayokuna
 At this step I rewrote the app from scratch and plan to refactor it to use DataStore, Kotlin Flow, Jetpack Compose, 
 Clean Architecture. 
 
+## TODO List
+- Refactor preferences to Flow DONE
+- Use Kotlin Flows for observing changes DONE (reject in favor of suspend functions)
+- Refactor to Clean Architecture DONE
+- Introduce unidirectional data flow DONE
+- test app components
+- Refactor to use Jetpack Compose for UI (make sure there's no flickering when list of forecasts is updated)
+- Add WorkManager work to clear DB cache depending on cache duration from preferences
+- Create widget for the app
+- Add animations
+
 ```text
 MIT License
 

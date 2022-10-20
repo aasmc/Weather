@@ -89,11 +89,12 @@ val fakeWeatherForecastList = listOf(
     createNewWeatherForecast("9 Jan 2022, 12:00am"),
     createNewWeatherForecast("9 Jan 2022, 12:00am")
 )
+const val queryLocation = "Lagos"
 
 val invalidDataException = Exception("Invalid Data")
 val networkExceptionLoadForecasts = NetworkException("Failed to load forecasts from network for city ID: 123")
+val networkExceptionLoadSearchWeather = NetworkException("Failed to load search weather from network for location: $queryLocation")
 val networkExceptionLoadWeather = NetworkException("Failed to load weather data from network with location: $dummyLocation")
 val dbExceptionLoadWeather = DBException("Failed to load weather data from database with location: $dummyLocation")
 val dbExceptionLoadForecasts = DBException("Failed to load forecasts from database for city ID: 123")
-const val queryLocation = "Lagos"
 const val cityId = 1234
