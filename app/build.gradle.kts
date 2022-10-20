@@ -87,7 +87,7 @@ android {
     android {
         sourceSets {
             getByName("test").java.srcDir("src/sharedTest/java")
-            getByName("androidTest").java.srcDir("src/sharedTest/java")
+            getByName("androidTest").java.srcDir("../src/sharedTest/java")
         }
     }
 
@@ -140,6 +140,8 @@ dependencies {
 
     // Room
     implementation(libs.roomRuntime)
+    androidTestImplementation(project(mapOf("path" to ":app")))
+    androidTestImplementation(project(mapOf("path" to ":app")))
     kapt(libs.roomCompiler)
     implementation(libs.roomKtx)
 
