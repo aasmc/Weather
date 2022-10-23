@@ -140,8 +140,6 @@ dependencies {
 
     // Room
     implementation(libs.roomRuntime)
-    androidTestImplementation(project(mapOf("path" to ":app")))
-    androidTestImplementation(project(mapOf("path" to ":app")))
     kapt(libs.roomCompiler)
     implementation(libs.roomKtx)
 

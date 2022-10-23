@@ -10,7 +10,7 @@ Clean Architecture.
 - Use Kotlin Flows for observing changes DONE (reject in favor of suspend functions)
 - Refactor to Clean Architecture DONE
 - Introduce unidirectional data flow DONE
-- test app components
+- test app components DONE
 - Refactor to use Jetpack Compose for UI (make sure there's no flickering when list of forecasts is updated)
 - Add WorkManager work to clear DB cache depending on cache duration from preferences
 - Create widget for the app
